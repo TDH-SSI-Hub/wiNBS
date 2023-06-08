@@ -1,0 +1,20 @@
+Package: wiNBS
+Title: Edit and clean data in NBS with an automated browser.
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Greg",
+           family = "Chambers",
+           role = c("aut", "cre"),
+           email = "greg.chambers@tn.gov",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Wrapper functions that simplify common tasks when using RSelenium Browsers to clean and edit data in NBS.
+License: `use_mit_license()`
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports:
+	stringr,
+	tools,
+	magrittr,
+	jsonlite
