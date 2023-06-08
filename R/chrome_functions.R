@@ -1,4 +1,16 @@
 
+
+
+#' Delete Chrome licenses
+#'
+#' The licenses interfere with opening browsers.
+#'
+#' @return Nothing
+#' @export
+chrome_license_clear<-function(){
+  file.remove(list.files(binman::app_dir('chromedriver'), full.names = T, pattern = 'LICENSE',recursive = T))
+}
+
 #' Determine latest Chrome version
 #'
 #' Examines the Chrome application to identify which Chrome driver version to use.
