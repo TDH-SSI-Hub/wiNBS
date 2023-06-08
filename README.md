@@ -1,2 +1,2 @@
 # wiNBS
-Functions for working with NBS
+Functions for working in NBS
