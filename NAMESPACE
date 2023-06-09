@@ -2,6 +2,7 @@
 
 S3method(log,output)
 export(chrome_close_browser)
+export(chrome_license_clear)
 export(chrome_open_browser)
 export(chrome_version)
 export(chrome_window_switch)
