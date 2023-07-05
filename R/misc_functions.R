@@ -78,14 +78,27 @@ log.output<-function(df, odbc_name, table_name){
 #' @param visible Open the email in the viewer
 #' @param check_ooo Check for and remove recipients who are out of office the entire day
 #' @param send Send the email
+#' @param signature Attach signature to end of email
 #'
 #' @return T/F
 #' @export
-email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F) {
+email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F, signature=T) {
   if(require('RDCOMClient')){
     
     OutApp <- RDCOMClient::COMCreate("Outlook.Application")
     email <- OutApp$CreateItem(0)
+    
+    # Send the message from an alternate account
+    if (!is.na(from)) {
+      email[["sentonbehalfofname"]] <- from
+    }
+    
+
+    if(signature){
+      inspector<-email$GetInspector()
+      signaturetext <- email[["HTMLBody"]]
+      inspector$Close(1)
+    }
     
     if (visible) email$Display()
     
@@ -98,13 +111,15 @@ email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bc
     if (check_ooo) {
       remove_list <- c()
       for (i in seq_len(email[["recipients"]]$Count())) {
+        tryCatch({
         time_string <- email[["recipients"]]$item(i)[["AddressEntry"]]$GetFreeBusy(as.character(Sys.Date()), 60, T) %>% substr(1, 24)
         if (time_string == paste0(rep(3, 24), collapse = "")) {
           message(paste0(email[["recipients"]]$item(i)[["Name"]], " is OOO"))
           remove_list <- c(remove_list, i)
         } else {
-          message(email[["recipients"]]$item(i)[["Name"]])
+          #message(email[["recipients"]]$item(i)[["Name"]])
         }
+        }, error=function(e) message(paste0('Error checking OOO status for ',email[["recipients"]]$item(i)[["Name"]])))
       }
       
       for (i in remove_list) {
@@ -112,25 +127,22 @@ email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bc
       }
     }
     
-    if (email[["to"]] == "") {
-      message("Email has no main recipient; email discarded")
-      email$Close(1)
-      return(F)
-    }
-    
-    # Send the message from an alternate account
-    if (!is.na(from)) {
-      email[["sentonbehalfofname"]] <- from
-    }
+
     
     email[["subject"]] <- subject
     
     
-    if (!grepl("<br>", body)) {
-      email[["body"]] <- body
+    if (grepl("<br>",body)) {
+      email[["HTMLBody"]] <- body
     } else {
-      email[["HTMLbody"]] <- body
+      email[["body"]] <- body
     }
+    
+
+    if(signature){
+      email[["HTMLBody"]] <- paste0(email[["HTMLBody"]],signaturetext)
+    }
+
     
     if (length(attach) > 0) {
       for (i in attach) {
@@ -146,7 +158,16 @@ email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bc
     
     
     if (send) {
+      
+      if (email[["to"]] == "") {
+        message("Email has no main recipient; email discarded")
+        email$Close(1)
+        return(F)
+      }
+      
       return(email$Send())
+    }else{
+      return(NA)
     }
   }else{
     message('You need to install RDCOMClient to send emails')
@@ -167,3 +188,4 @@ email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bc
 email_send <- function(..., visible = F, send = T) {
   email_draft(..., visible = visible, send = send)
 }
+
