@@ -63,6 +63,7 @@ chrome_open_browser<-function(kill_java=T, port=4636L, chrome_ver=NA, print_to=N
       rm('remDr',pos=1)
     })
   }
+  
 
   remDr$setTimeout(type = "implicit", milliseconds = 4000)
   message("Browser 'remDr' created")

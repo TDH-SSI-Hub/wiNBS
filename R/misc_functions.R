@@ -65,4 +65,105 @@ log.output<-function(df, odbc_name, table_name){
 }
 
 
+#' Draft and possibly send an Outlook email
+#'
+#'
+#' @param to Main recipients
+#' @param subject Email subject
+#' @param body Email body. Searches for html line break to decide if body is html
+#' @param from Alternate email to send on behalf of
+#' @param attach Character vector of files to attach
+#' @param cc Email cc
+#' @param bcc Email bcc
+#' @param visible Open the email in the viewer
+#' @param check_ooo Check for and remove recipients who are out of office the entire day
+#' @param send Send the email
+#'
+#' @return T/F
+#' @export
+email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F) {
+  if(require('RDCOMClient')){
+    
+    OutApp <- RDCOMClient::COMCreate("Outlook.Application")
+    email <- OutApp$CreateItem(0)
+    
+    if (visible) email$Display()
+    
+    for (r in c("to", "cc", "bcc")) {
+      if (length(get(r)) > 0) {
+        email[[r]] <- paste0(get(r), collapse = ";")
+      }
+    }
+    
+    if (check_ooo) {
+      remove_list <- c()
+      for (i in seq_len(email[["recipients"]]$Count())) {
+        time_string <- email[["recipients"]]$item(i)[["AddressEntry"]]$GetFreeBusy(as.character(Sys.Date()), 60, T) %>% substr(1, 24)
+        if (time_string == paste0(rep(3, 24), collapse = "")) {
+          message(paste0(email[["recipients"]]$item(i)[["Name"]], " is OOO"))
+          remove_list <- c(remove_list, i)
+        } else {
+          message(email[["recipients"]]$item(i)[["Name"]])
+        }
+      }
+      
+      for (i in remove_list) {
+        email[["recipients"]]$Remove(i)
+      }
+    }
+    
+    if (email[["to"]] == "") {
+      message("Email has no main recipient; email discarded")
+      email$Close(1)
+      return(F)
+    }
+    
+    # Send the message from an alternate account
+    if (!is.na(from)) {
+      email[["sentonbehalfofname"]] <- from
+    }
+    
+    email[["subject"]] <- subject
+    
+    
+    if (!grepl("<br>", body)) {
+      email[["body"]] <- body
+    } else {
+      email[["HTMLbody"]] <- body
+    }
+    
+    if (length(attach) > 0) {
+      for (i in attach) {
+        if (!grepl(getwd(), i)) i <- paste0(getwd(), "/", i)
+        tryCatch(
+          {
+            email[["attachments"]]$Add(i)
+          },
+          error = function(e) message(paste0("Failed to attach ", i))
+        )
+      }
+    }
+    
+    
+    if (send) {
+      return(email$Send())
+    }
+  }else{
+    message('You need to install RDCOMClient to send emails')
+    return(F)
+  }
+}
 
+
+#' Send an Outlook email. Wrapper around email_draft()
+#'
+#'
+#' @param ... options for email_draft()
+#' @param visible Open the email in the viewer
+#' @param send Send the email
+#'
+#' @return T/F
+#' @export
+email_send <- function(..., visible = F, send = T) {
+  email_draft(..., visible = visible, send = send)
+}
