@@ -65,7 +65,7 @@ log.output<-function(df, odbc_name, table_name){
 }
 
 
-#' Draft and possibly send an Outlook email
+#' Draft and possibly send an Outlook email.
 #'
 #'
 #' @param to Main recipients
@@ -85,7 +85,16 @@ log.output<-function(df, odbc_name, table_name){
 email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F, signature=T) {
   if(require('RDCOMClient')){
     
-    OutApp <- RDCOMClient::COMCreate("Outlook.Application")
+    check_error<-tryCatch(getCOMInstance('Outlook.Application', force=F), error=function(e){
+      return(e)
+    })
+    
+    if(!"COMIDispatch" %in% unlist(class(check_error))){
+      message('No Outlook instance open; signature and OOO check disabled')
+      check_ooo <- F
+      signature <- F
+    }
+    OutApp <- RDCOMClient::COMCreate("Outlook.Application", existing = F)
     email <- OutApp$CreateItem(0)
     
     # Send the message from an alternate account
