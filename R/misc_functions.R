@@ -79,10 +79,11 @@ log.output<-function(df, odbc_name, table_name){
 #' @param check_ooo Check for and remove recipients who are out of office the entire day
 #' @param send Send the email
 #' @param signature Attach signature to end of email
+#' @param appname Name of the Outlook object in R. If this object already exists, it is used. If it does not exist, it is created in the global environment.
 #'
 #' @return T/F
 #' @export
-email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F, signature=T) {
+email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bcc = c(), visible = T, check_ooo = F, send = F, signature=T, appname='outApp') {
   if(require('RDCOMClient')){
     
     check_error<-tryCatch(getCOMInstance('Outlook.Application', force=F), error=function(e){
@@ -94,8 +95,10 @@ email_draft <- function(to, subject, body, from = NA, attach = c(), cc = c(), bc
       check_ooo <- F
       signature <- F
     }
-    OutApp <- RDCOMClient::COMCreate("Outlook.Application", existing = F)
-    email <- OutApp$CreateItem(0)
+    if(!exists(appname)){
+    outApp <<- RDCOMClient::COMCreate("Outlook.Application", existing = F)
+    }
+    email <- outApp$CreateItem(0)
     
     # Send the message from an alternate account
     if (!is.na(from)) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/misc_functions.R
 \name{email_draft}
 \alias{email_draft}
-\title{Draft and possibly send an Outlook email}
+\title{Draft and possibly send an Outlook email.}
 \usage{
 email_draft(
   to,
@@ -14,7 +14,9 @@ email_draft(
   bcc = c(),
   visible = T,
   check_ooo = F,
-  send = F
+  send = F,
+  signature = T,
+  appname = "outApp"
 )
 }
 \arguments{
@@ -22,7 +24,7 @@ email_draft(
 
 \item{subject}{Email subject}
 
-\item{body}{Email body. Searches for '<br>' to decide if body is html}
+\item{body}{Email body. Searches for html line break to decide if body is html}
 
 \item{from}{Alternate email to send on behalf of}
 
@@ -37,10 +39,14 @@ email_draft(
 \item{check_ooo}{Check for and remove recipients who are out of office the entire day}
 
 \item{send}{Send the email}
+
+\item{signature}{Attach signature to end of email}
+
+\item{appname}{Name of the Outlook object in R. If this object already exists, it is used. If it does not exist, it is created in the global environment.}
 }
 \value{
 T/F
 }
 \description{
-Draft and possibly send an Outlook email
+Draft and possibly send an Outlook email.
 }
