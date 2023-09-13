@@ -18,4 +18,6 @@ Imports:
 	tools,
 	magrittr,
 	jsonlite,
-	binman
+	binman,
+	parallelly,
+  RSelenium

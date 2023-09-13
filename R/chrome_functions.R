@@ -43,12 +43,21 @@ chrome_version<-function(chrome_loc="C:\\Program Files (x86)\\Google\\Chrome\\Ap
 #' @param print_to Folder location for downloads (only needed when printing pdfs or downloading files).
 #' @return Chrome browser object
 #' @export
-chrome_open_browser<-function(kill_java=T, port=4636L, chrome_ver=NA, print_to=NA){
+chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=NA){
+  
+  if(exists('rD')) rm('rD',pos = 1)
+  if(exists('remDr')) rm('remDr',pos = 1)
+  chrome_license_clear()
+  
   if(!is.na(print_to)){
     eCaps <- list(chromeOptions = list(args = list('--kiosk-printing'),prefs = list("savefile.default_directory"=print_to,"download.default_directory" = print_to, "printing.print_preview_sticky_settings.appState"= jsonlite::toJSON(list(recentDestinations=list(id='Save as PDF',origin='local',account=''),selectedDestinationId='Save as PDF', version=2),auto_unbox=TRUE))))
   } else{
     eCaps<-list()
   }
+  if(is.na(port)){
+    port<-parallelly::freePort()
+  }
+  
   cver<-as.numeric_version(binman::list_versions("chromedriver")[[1]])
   cver<-cver[order(cver, decreasing = T)]
   vtry<-0
