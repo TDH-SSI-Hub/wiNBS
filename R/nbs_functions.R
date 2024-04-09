@@ -201,4 +201,241 @@ nbs_mark_as_reviewed<-function(){
 #' @export
 nbs_is_legacy_page <- function() {
   length(rvest::html_node(rvest::read_html(remDr$getPageSource()[[1]]), '.cellColor'))!=2
+}
+
+
+
+#' Edit the quick code on an investigation
+#' 
+#' @param id HTML ID for quick code field
+#' @param val Quick code to enter
+#' @param pre_clear T/F. Should the quick code be cleared before attempting to enter the new value?
+#'
+#' @return NULL
+#' @export
+edit_quick_code<-function(id,val, pre_clear=F){
+  
+  if(pre_clear){
+    if(remDr$findElement('id',paste0('clear',id))$getElementAttribute('class')!='none'){
+      remDr$findElement('id',paste0('clear',id))$clickElement()
+    }
   }
+  remDr$findElement('name',paste0("pageClientVO.answer(",id,")"))$sendKeysToElement(list("\uE009a\uE009",val))
+  Sys.sleep(.3)
+  remDr$findElement('id',paste0(id,"CodeLookupButton"))$clickElement()
+}
+
+
+
+#' Edit a text field
+#' 
+#' @param id String. HTML ID for text field. Can vary based on ID type.
+#' @param val String. Text to enter. Can be a list of strings.
+#' @param id_type String. HTML attribute used to find the element. Usually one of id, name, xpath, etc. 
+#' @param id_suffix String. Suffix for the element ID.
+#' @param pre_clear T/F. Should the existing text be highlighted prior to new text being entered. If TRUE, existing text will be cleared.
+#' @param post_key string. One of tab, enter, etc. to be pressed after the text has been entered. Tab (the default) shifts the cursor to the next element, and can help when you need the text field data read in to activate page logic.
+#'
+#' @return NULL
+#' @export
+edit_text_field<-function(id, val,id_type='name', id_suffix='_textbox' ,pre_clear=T,post_key='tab'){
+  new_val<-list()
+  if(pre_clear) new_val<- append(new_val,"\uE009a\uE009")
+  new_val<- append(new_val,val)
+  if(!is.na(post_key)) new_val<- append(new_val,list(key=post_key))
+  
+  remDr$findElement(id_type,paste0(id,id_suffix))$sendKeysToElement(new_val)
+  
+}
+
+
+#' Edit a date field
+#' 
+#' @param id String. HTML ID for date field.
+#' @param val String. A date or value that can be coerced into a date.
+#'
+#' @return NULL
+#' @export
+edit_date<-function(id, val){
+  edit_text_field(id,as.character(TNTools::tn_clean_date(val, format = '%m/%d/%Y')), id_suffix = '', id_type = 'id')
+}
+
+#' Edit a numeric field
+#' 
+#' @param id String. HTML ID for numeric field.
+#' @param val String. A number or value that can be coerced into a number.
+#'
+#' @return NULL
+#' @export
+edit_numeric<-function(id, val){
+  remDr$findElement('id',id)$clearElement()
+  edit_text_field(id,as.character(val), id_suffix = '', id_type = 'id')
+}
+
+
+#' Retrieve page metadata for a given page
+#' 
+#' @param page String. Page name found in url. If NA, the current url of the browser will be used. Currently requires ODSE access and properly formatted ODBC connection.
+#'
+#' @return Dataframe of page metadata
+#' @export
+nbs_get_page_metadata<-function(page=NA){
+  if(is.na(page)) page<-remDr$getCurrentUrl()
+  
+  if(grepl('invFormCd=',page)){
+    page<-substr(page,str_locate(page,'invFormCd=')[2]+1,nchar(page))
+  }
+  
+  odbc_con<-odbcConnect('NBS_Prod')
+  sqlQuery(odbc_con,paste0("select * from [nbs_odse].[dbo].[NBS_ui_metadata]
+           where investigation_form_cd = '",page,"'"))
+}
+
+
+
+
+#' Set the value of a field on the edit investigation page
+#' 
+#' Given an ID, a desired value, and the page metadata, this function will determine what type of field needs to be updated, which helper function should be used, and then update the field. It can also check to be sure the correct tab is selected prior to updating the field, although organizing your code to minimize the number of checks needed is highly recommended for speed purposes.
+#' 
+#' @param id String. HTML ID or metadata label for field.
+#' @param value String. Value to send to the field.
+#' @param refresh_metadata T/F. A value of T will create/recreate the metadata object in the global environment. If this object does not exist, it is created. Setting to F is faster.
+#' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
+#' 
+#' @return NULL
+#' @export
+nbs_set_field<-function(id, value, refresh_metadata=F, check_tab=F){
+  if(!exists('metadata')|refresh_metadata){
+    metadata<<-nbs_get_page_metadata()
+  }
+  
+  metadata_row<-metadata$question_identifier==id|metadata$question_label==id
+  
+  field_type<-toupper(metadata$data_type[metadata_row])
+  field_id<-metadata$question_identifier[metadata_row]
+  
+  if(check_tab){
+    ps<-remDr$getPageSource() %>% unlist() %>% rvest::read_html()
+    test_x<-ps %>%
+      rvest::html_nodes(xpath=paste0('//*[@id="',field_id,'"]'))
+    tab_id<-gsub('tabs0tab','tabs0head',find_ancestor(test_x,'id','tabs0tab\\d'))
+    tab_index<-as.numeric(substr(tab_id,nchar(tab_id),nchar(tab_id)))+1
+    tab_info<-ps %>% 
+      html_element(xpath=paste0('//*[@id="',tab_id,'"]')) %>% 
+      html_attr('class')
+    if(tab_info!='ongletTextEna'){
+      #message(paste0('Switching to tab ',tab_index))
+      remDr$findElement('xpath',paste0('//*[@id="',tab_id,'"]'))$clickElement()
+    }
+  }
+  
+  if(field_type=='CODED'){
+    edit_text_field(id=field_id, val=value)
+  }else if(field_type=='TEXT'){
+    edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
+  }else if(field_type=='PART'){
+    edit_quick_code(field_id,value)
+  }else if(field_type=='NUMERIC'){
+    edit_numeric(field_id,value)
+  }else if(field_type=='DATE'){
+    edit_date(field_id,value)
+  }else{
+    message('Unrecognized field type. Self destruct sequence initiated')
+  }
+  
+}
+
+
+#' Find an NBS quick code using the displayed demographic details
+#' 
+#' This function reverse searches for a quick code, given the information found in an NBS profile. This requires ODSE access and a properly formatted ODBC connection.
+#' If a code can't be found, it is set to 'nbs-bot'. Code searches and their results are stored in the qlist object, so subsequent searches for the same profile can use the archived info (faster).
+#' 
+#' @param full_text String. The text found in an NBS profile, generated by a quick code.
+#'  
+#' @return Quick code
+#' @export
+nbs_get_quick_code<-function(full_text='nbs bot, ESQ Tennessee'){
+  if(!exists('qlist')){
+    qlist<<-list('nbs bot, ESQ Tennessee'='nbs-bot')
+  }
+  
+  if(full_text=='') return(qlist[['nbs bot, ESQ Tennessee']])
+  
+  if(!full_text %in% names(qlist)){
+    split_text<-str_split(full_text,'\n')[[1]]
+    name<-split_text[1]
+    
+    names<-str_split(name,' ')[[1]]
+    p.first_nm<-names[1]
+    p.last_nm<-names[2]
+    
+    if(length(split_text)>1){
+      is.phone<-grepl('\\d\\d\\d-\\d\\d\\d-\\d\\d\\d\\d',split_text)
+      t.phone_nbr_txt<-phone<-split_text[is.phone]
+      t.phone_nbr_txt<-str_extract(phone,'\\d\\d\\d-\\d\\d\\d-\\d\\d\\d\\d')
+      if(length(t.phone_nbr_txt)>0){
+        t.extension_txt<-str_extract(phone,'Ext\\. \\d*$') %>% str_replace('Ext\\. ','')
+        if(is.na(t.extension_txt)) t.extension_txt<-character(0)
+      }
+      is.address<-grepl('^\\d.*\\D',split_text) & !is.phone
+      pl.street_addr1<-split_text[is.address]
+      is.location<-!is.phone & !is.address & c(F,rep(T,length(split_text)-1))
+      
+      location<-split_text[is.location]
+      if(length(location)>=1){
+        location<-location[[1]] %>% str_split(',')
+        pl.city_desc_txt<-location[[1]][1]
+        
+        s.code_desc_txt<-paste0(str_extract_all(location[[1]][2],'[[:alpha:]]')[[1]],collapse='')
+        pl.zip_cd<-paste0(str_extract_all(location[[1]][2],'\\d')[[1]],collapse='')
+      }
+    }
+    where_clauses<-c('p.first_nm','p.last_nm','t.phone_nbr_txt','t.extension_txt','pl.street_addr1','pl.city_desc_txt','s.code_desc_txt','pl.zip_cd')
+    #rm('p.first_nm','p.last_nm','t.phone_nbr_txt','pl.street_addr1','pl.city_desc_txt','s.code_desc_txt','pl.zip_cd','t.extension_txt')
+    base_query<-"select root_extension_txt
+  ,p.record_status_cd
+from nbs_odse..person p
+left join nbs_odse..Person_name pn
+on pn.person_uid = p.person_uid
+left join nbs_odse..entity_id AS ei
+on p.person_uid=ei.entity_uid
+left join nbs_odse..Entity_locator_participation elp
+on p.person_uid = elp.entity_uid
+and elp.class_cd='Tele'
+left join nbs_odse..Tele_locator t
+on elp.locator_uid = t.tele_locator_uid
+left join nbs_odse..Entity_locator_participation elp2
+on p.person_uid = elp2.entity_uid
+and elp2.class_cd='PST'
+left join nbs_odse..Postal_locator pl
+on elp2.locator_uid = pl.postal_locator_uid
+left join nbs_srte..state_code s
+on s.state_cd = pl.state_cd
+where ei.type_cd='QEC' and p.record_status_cd = 'ACTIVE'"
+    w<- where_clauses[1]
+    for(w in where_clauses)  {
+      if(!exists(w)) next
+      current_w<-get(w)
+      if(length(current_w)==1){
+        base_query<-paste0(base_query,' and ',w," = '",current_w,"'")
+      }
+    }
+    
+    base_query<-paste0(base_query,' order by p.record_status_time desc')
+    
+    message(paste0('Adding Quick Code for ',name))
+    
+    prod<-odbcConnect('NBS_Prod')
+    qcode<-sqlQuery(prod,base_query)
+    if(nrow(qcode)==0){
+      qlist[[full_text]]<<-'nbs-bot'
+    }else{
+      qlist[[full_text]]<<-qcode[1,1]
+    }
+    return(qlist[full_text])
+  }else{
+    return(qlist[full_text] )
+  }
+}

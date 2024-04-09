@@ -201,3 +201,18 @@ email_send <- function(..., visible = F, send = T) {
   email_draft(..., visible = visible, send = send)
 }
 
+#' Find an ancestor by attribute
+#'
+#' @param x html to search
+#' @param attr Attribute to extract
+#' @param val Pattern to search for
+#'
+#' @return xpath of attribute
+#' @export
+find_ancestor<-function(x,attr,val){
+  xml2::xml_parents(x[[1]]) %>% 
+    xml_attr(attr) %>% 
+    str_extract(val)  %>% 
+    .[!is.na(.)]
+}
+
