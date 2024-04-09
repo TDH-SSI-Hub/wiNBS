@@ -216,3 +216,15 @@ find_ancestor<-function(x,attr,val){
     .[!is.na(.)]
 }
 
+
+#' @import xml2
+#' @import magrittr
+#' @import RSelenium
+#' @import stringr
+#' @import jsonlite
+#' @import binman
+#' @import parallelly
+#' @import RODBC
+#' @import rvest
+NULL
+

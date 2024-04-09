@@ -5,8 +5,8 @@
 \title{Determine latest Chrome version}
 \usage{
 chrome_version(
- 
-    chrome_loc = "C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"
+  chrome_loc =
+    "C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"
 )
 }
 \arguments{
