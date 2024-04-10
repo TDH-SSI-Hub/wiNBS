@@ -2,7 +2,7 @@
 % Please edit documentation in R/nbs_functions.R
 \name{nbs_investigation_submit}
 \alias{nbs_investigation_submit}
-\title{Go to the NBS home page}
+\title{Submit changes to an investigation}
 \usage{
 nbs_investigation_submit()
 }
@@ -10,5 +10,5 @@ nbs_investigation_submit()
 Nothing
 }
 \description{
-Go to the NBS home page
+Submit changes to an investigation
 }

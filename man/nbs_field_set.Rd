@@ -4,14 +4,14 @@
 \alias{nbs_field_set}
 \title{Set the value of a field on the edit investigation page}
 \usage{
-nbs_field_set(id, value, refresh_metadata = F, check_tab = F)
+nbs_field_set(id, value, page = NA, check_tab = F)
 }
 \arguments{
 \item{id}{String. HTML ID or metadata label for field.}
 
 \item{value}{String. Value to send to the field.}
 
-\item{refresh_metadata}{T/F. A value of T will create/recreate the metadata object in the global environment. If this object does not exist, it is created. Setting to F is faster.}
+\item{page}{String. The url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).}
 
 \item{check_tab}{T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).}
 }

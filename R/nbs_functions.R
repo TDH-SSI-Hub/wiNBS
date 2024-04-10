@@ -350,7 +350,7 @@ nbs_home_page<-function(){
   remDr$findElements("class", "navLink")[[1]]$clickElement()
 }
 
-#' Go to the NBS home page
+#' Submit changes to an investigation
 #'
 #' @return Nothing
 #' @export
@@ -403,15 +403,13 @@ nbs_investigation_edit<-function(){
 #' 
 #' @param id String. HTML ID or metadata label for field.
 #' @param value String. Value to send to the field.
-#' @param refresh_metadata T/F. A value of T will create/recreate the metadata object in the global environment. If this object does not exist, it is created. Setting to F is faster.
+#' @param page String. The url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
 #' 
 #' @return NULL
 #' @export
-nbs_field_set<-function(id, value, refresh_metadata=F, check_tab=F){
-  if(!exists('metadata')|refresh_metadata){
-    metadata<<-nbs_get_page_metadata()
-  }
+nbs_field_set<-function(id, value, page=NA, check_tab=F){
+    metadata<-nbs_page_metadata_get(page)
   
   metadata_row<-metadata$question_identifier==id|metadata$question_label==id
   
