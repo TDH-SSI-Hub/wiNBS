@@ -376,7 +376,7 @@ nbs_investigation_go_to<-function(ID){
       str_which(ID)
     remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$clickElement()
   }else{
-    remDr$navigate(paste0("https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",uid))
+    remDr$navigate(paste0("https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",ID))
   }
 }
 
