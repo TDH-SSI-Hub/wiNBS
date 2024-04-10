@@ -62,7 +62,7 @@ nbs_search <- function(ID_value, ID_type = "Investigation ID") {
 #' @return Nothing
 #' @export
 nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi.tn.gov/auth/login") {
-  password<-nbs_get_password(u)
+  password<-nbs_password_get(u)
   if(is.na(password)){
     return(NA)  
     }
