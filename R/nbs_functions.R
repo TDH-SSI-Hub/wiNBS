@@ -7,7 +7,7 @@
 #' 
 #' @return Nothing
 #' @export
-nbs_set_password<-function(username,password=''){
+nbs_password_set<-function(username,password=''){
   message('Password set. Delete lines containing the password from this file.')
   keyring::key_set_with_value('NBS',username,password)
 }
@@ -15,18 +15,18 @@ nbs_set_password<-function(username,password=''){
 
 #' Retrieve NBS password for an account
 #'
-#' Retrieves a password set with nbs_set_password().
+#' Retrieves a password set with nbs_password_set().
 #'
 #' @param username NBS username
 #' 
 #' @return NBS password
 #' @export
-nbs_get_password<-function(username){
+nbs_password_get<-function(username){
   if(username %in% keyring::key_list('NBS')$username){
     message('Do not store your password in a script.')
     return(keyring::key_get('NBS',username))
   }else{
-    message(paste0('No credentials found for ',username,'. Use nbs_set_password() to create credentials.'))
+    message(paste0('No credentials found for ',username,'. Use nbs_password_set() to create credentials.'))
     return(NA)
   }
   return(NA)
@@ -89,7 +89,7 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
 #' (e.g., 'https://nbsproduction.tn.gov/nbs/')
 #' @return T/F if file downloaded
 #' @export
-nbs_download_file <- function(element, outputname, url = "https://nbsproduction.tn.gov/nbs/") {
+nbs_file_download <- function(element, outputname, url = "https://nbsproduction.tn.gov/nbs/") {
   old.exact.name <- tryCatch(unlist(element$getElementText()), error = function(e) {
     return(NA)
   })
@@ -164,7 +164,7 @@ nbs_queue_filter <- function(dropdown, search_for, grepl = F, select_all = F) {
 #'
 #' @return None
 #' @export
-nbs_print_pdf <- function(pdfname, folder = NA, legacy_print = F) {
+nbs_pdf_print <- function(pdfname, folder = NA, legacy_print = F) {
   download_location <- remDr$extraCapabilities$chromeOptions$prefs$savefile.default_directory
   if (is.null(download_location)) {
     message("ERROR: No download directory set. Set print_to argument in chrome_open_browser()")
@@ -225,7 +225,7 @@ nbs_print_pdf <- function(pdfname, folder = NA, legacy_print = F) {
 #'
 #' @return "Marked as Reviewed" or "Already marked"
 #' @export
-nbs_mark_as_reviewed<-function(){
+nbs_lab_mark_as_reviewed<-function(){
   if('markReviewd' %in% html_attr(html_nodes(read_html(remDr$getPageSource()[[1]]),'input'),'name')){
     remDr$findElement('name','markReviewd')$clickElement()
     return('Marked as Reviewed')
@@ -239,7 +239,7 @@ nbs_mark_as_reviewed<-function(){
 #'
 #' @return T/F
 #' @export
-nbs_is_legacy_page <- function() {
+nbs_page_is_legacy <- function() {
   length(rvest::html_node(rvest::read_html(remDr$getPageSource()[[1]]), '.cellColor'))!=2
 }
 
@@ -315,24 +315,86 @@ edit_numeric<-function(id, val){
 
 #' Retrieve page metadata for a given page
 #' 
-#' @param page String. Page name found in url. If NA, the current url of the browser will be used. Currently requires ODSE access and properly formatted ODBC connection.
+#' @param page String. Page name found in url. If NA, the correct page is determined using the current browser page.
 #'
 #' @return Dataframe of page metadata
 #' @export
-nbs_get_page_metadata<-function(page=NA){
-  if(is.na(page)) page<-remDr$getCurrentUrl()
-  
-  if(grepl('invFormCd=',page)){
+nbs_page_metadata_get<-function(page=NA){
+  if(is.na(page)){
+    page<-remDr$getCurrentUrl()
+    if(grepl('invFormCd=',page)){
+      page<-substr(page,str_locate(page,'invFormCd=')[2]+1,nchar(page))
+    }else{
+      page<-gsub('View Investigation: ','',remDr$findElement('xpath','//*[@id="bd"]/h1/table/tbody/tr[1]/td[1]/a')$getElementText())
+      page<-condition_metadata$investigation_form_cd[condition_metadata$condition_short_nm==page]
+    }
+  } else if(grepl('invFormCd=',page)){
     page<-substr(page,str_locate(page,'invFormCd=')[2]+1,nchar(page))
+  } else if(page %in% page_metadata$investigation_form_cd){
+    
+  } else if(page %in% condition_metadata$condition_short_nm){
+    page<-condition_metadata$investigation_form_cd[condition_metadata$condition_short_nm==page]
+  }else{
+    message('No valid page selected or detected')
+    return(NA)
   }
   
-  #odbc_con<-odbcConnect('NBS_Prod')
-  #sqlQuery(odbc_con,paste0("select * from [nbs_odse].[dbo].[NBS_ui_metadata]
-  #         where investigation_form_cd = '",page,"'"))
   page_metadata[page_metadata$investigation_form_cd==page,]
 }
 
+#' Go to the NBS home page
+#'
+#' @return Nothing
+#' @export
+nbs_home_page<-function(){
+  remDr$findElements("class", "navLink")[[1]]$clickElement()
+}
 
+#' Go to the NBS home page
+#'
+#' @return Nothing
+#' @export
+nbs_investigation_submit<-function(){
+  remDr$findElement("id", "SubmitTop")$clickElement()
+}
+
+#' Go to an investigation from a patient page
+#' 
+#' @param ID A case ID or UID. UID is slightly faster.
+#'
+#' @return Nothing
+#' @export
+nbs_investigation_go_to<-function(ID){
+  ID<-as.character(ID)
+  if(grepl('cas',ID,ignore.case=T)){
+    case_index<-remDr$getPageSource() %>% 
+      unlist() %>% 
+      read_html() %>% 
+      html_element(xpath='//*[@id="eventSumaryInv"]/tbody')  %>% 
+      html_text() %>% 
+      str_split('\nT\n') %>% unlist() %>% 
+      str_which(ID)
+    remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$clickElement()
+  }else{
+    remDr$navigate(paste0("https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",uid))
+  }
+}
+
+#' Edit an investigation
+#' 
+#' If a notification exists, accept the alert
+#'
+#' @return Nothing
+#' @export
+nbs_investigation_edit<-function(){
+  notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()!=''
+  # This is the edit button for most accounts, not the delete button
+  remDr$findElement("id", 'delete')$clickElement()
+  # Accept the alert if there is one
+  if(notification){remDr$acceptAlert()
+  Sys.sleep(.5)
+  }
+}
 
 
 #' Set the value of a field on the edit investigation page
@@ -346,7 +408,7 @@ nbs_get_page_metadata<-function(page=NA){
 #' 
 #' @return NULL
 #' @export
-nbs_set_field<-function(id, value, refresh_metadata=F, check_tab=F){
+nbs_field_set<-function(id, value, refresh_metadata=F, check_tab=F){
   if(!exists('metadata')|refresh_metadata){
     metadata<<-nbs_get_page_metadata()
   }
@@ -397,7 +459,7 @@ nbs_set_field<-function(id, value, refresh_metadata=F, check_tab=F){
 #'  
 #' @return Quick code
 #' @export
-nbs_get_quick_code<-function(full_text='nbs bot, ESQ Tennessee'){
+nbs_quick_code_get<-function(full_text='nbs bot, ESQ Tennessee'){
   if(!exists('qlist')){
     qlist<<-list('nbs bot, ESQ Tennessee'='nbs-bot')
   }
