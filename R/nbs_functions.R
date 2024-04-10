@@ -396,6 +396,29 @@ nbs_investigation_edit<-function(){
   }
 }
 
+#' Retrieve field from an investigation page
+#' 
+#' @param id String. NBS question_identifier for the field.
+#' @param page_source Page html. If NA, will pull current browser page (slower). For longer queries, use remDr$getPageSource() to pull the html once.
+#'
+#' @return string
+#' @export
+nbs_field_get<-function(id,page_source=NA){
+  if(is.na(page_source)){
+    page_source <- remDr$getPageSource() %>% unlist() %>% rvest::read_html()
+  }
+  
+  if('list' %in% class(page_source)){
+    page_source<-unlist(page_source)
+  }
+  
+  if('character' %in% class(page_source)){
+    page_source<-rvest::read_html(page_source)
+  }
+  
+  
+  page_source %>% html_element(paste0('#',id)) %>% html_text2()
+}
 
 #' Set the value of a field on the edit investigation page
 #' 
