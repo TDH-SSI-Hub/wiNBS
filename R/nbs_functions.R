@@ -326,9 +326,10 @@ nbs_get_page_metadata<-function(page=NA){
     page<-substr(page,str_locate(page,'invFormCd=')[2]+1,nchar(page))
   }
   
-  odbc_con<-odbcConnect('NBS_Prod')
-  sqlQuery(odbc_con,paste0("select * from [nbs_odse].[dbo].[NBS_ui_metadata]
-           where investigation_form_cd = '",page,"'"))
+  #odbc_con<-odbcConnect('NBS_Prod')
+  #sqlQuery(odbc_con,paste0("select * from [nbs_odse].[dbo].[NBS_ui_metadata]
+  #         where investigation_form_cd = '",page,"'"))
+  page_metadata[page_metadata$investigation_form_cd==page,]
 }
 
 
