@@ -6,15 +6,12 @@
 \usage{
 nbs_load(
   u = "",
-  p = "",
   environment = "NBS Production",
   url = "https://hssi.tn.gov/auth/login"
 )
 }
 \arguments{
 \item{u}{NBS Username}
-
-\item{p}{NBS Password}
 
 \item{environment}{Environment to enter}
 

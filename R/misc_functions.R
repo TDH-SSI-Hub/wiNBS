@@ -226,5 +226,7 @@ find_ancestor<-function(x,attr,val){
 #' @import parallelly
 #' @import RODBC
 #' @import rvest
+#' @import dplyr
+#' @import keyring
 NULL
 

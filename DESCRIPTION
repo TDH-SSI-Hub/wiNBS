@@ -23,4 +23,6 @@ Imports:
   RSelenium,
   RODBC,
   xml2,
-  rvest
+  rvest,
+  dplyr,
+  keyring
