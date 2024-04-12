@@ -4,10 +4,14 @@
 \alias{nbs_investigation_go_to}
 \title{Go to an investigation from a patient page}
 \usage{
-nbs_investigation_go_to(ID)
+nbs_investigation_go_to(ID = NA, uid = NA, environment = "NBS Production")
 }
 \arguments{
-\item{ID}{A case ID or UID. UID is slightly faster.}
+\item{ID}{A case ID. Required if this function is called from outside the patient page.}
+
+\item{uid}{The case uid. Providing a uid may be slightly faster.}
+
+\item{environment}{What environment does this occur in? Only needed if this may be called from outside NBS (requiring login) or if uid is supplied.}
 }
 \value{
 Nothing

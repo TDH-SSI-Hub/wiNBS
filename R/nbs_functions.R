@@ -260,6 +260,13 @@ edit_quick_code<-function(id,val, pre_clear=F){
       remDr$findElement('id',paste0('clear',id))$clickElement()
     }
   }
+  
+  
+  if(nchar(val)>10){
+   val<- nbs_quick_code_get(val)
+  }
+  
+  
   remDr$findElement('name',paste0("pageClientVO.answer(",id,")"))$sendKeysToElement(list("\uE009a\uE009",val))
   Sys.sleep(.3)
   remDr$findElement('id',paste0(id,"CodeLookupButton"))$clickElement()
@@ -360,13 +367,35 @@ nbs_investigation_submit<-function(){
 
 #' Go to an investigation from a patient page
 #' 
-#' @param ID A case ID or UID. UID is slightly faster.
+#' @param ID A case ID. Required if this function is called from outside the patient page.
+#' @param uid The case uid. Providing a uid may be slightly faster.
+#' @param environment What environment does this occur in? Only needed if this may be called from outside NBS (requiring login) or if uid is supplied.
 #'
 #' @return Nothing
 #' @export
-nbs_investigation_go_to<-function(ID){
+nbs_investigation_go_to<-function(ID=NA,uid=NA,environment='NBS Production'){
   ID<-as.character(ID)
-  if(grepl('cas',ID,ignore.case=T)){
+  uid<-as.character(uid)
+  if(sum(is.na(c(ID,uid)))==2){
+    message('Error: ID or uid must be supplied')
+    return(NA)
+  }
+  
+  if(remDr$getTitle()!="View Patient File"){
+  
+  if(!is.na(ID)){
+  if (!grepl('nbs',remDr$getCurrentUrl())){
+    nbs_load(username,environment)
+  }
+    if(remDr$getTitle()!="NBS Dashboard") nbs_home_page()
+      nbs_search(ID)
+  }else{
+    message('ID must be supplied if not called from patient file')
+    return(NA)
+  }
+  }
+  
+  if(is.na(uid)){
     case_index<-remDr$getPageSource() %>%
       unlist() %>%
       read_html() %>%
@@ -377,8 +406,11 @@ nbs_investigation_go_to<-function(ID){
     url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))
   }else{
-    remDr$navigate(paste0("https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",ID))
+    base_url<-"https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID="
+    if(environment=='NBS Staging') base_url<-gsub('production','staging',base_url)
+    remDr$navigate(paste0(base_url,uid))
   }
+
 }
 
 #' Edit an investigation
@@ -481,7 +513,7 @@ nbs_field_set<-function(id, value, page=NA, check_tab=F){
 #'  
 #' @return Quick code
 #' @export
-nbs_quick_code_get<-function(full_text='nbs bot, ESQ Tennessee'){
+nbs_quick_code_get<-function(full_text='nbs bot, ESQ Tennessee', odbc_name = 'NBS_Prod'){
   if(!exists('qlist')){
     qlist<<-list('nbs bot, ESQ Tennessee'='nbs-bot')
   }
@@ -552,7 +584,7 @@ where ei.type_cd='QEC' and p.record_status_cd = 'ACTIVE'"
     
     message(paste0('Adding Quick Code for ',name))
     
-    prod<-odbcConnect('NBS_Prod')
+    prod<-odbcConnect(odbc_name)
     qcode<-sqlQuery(prod,base_query)
     if(nrow(qcode)==0){
       qlist[[full_text]]<<-'nbs-bot'
