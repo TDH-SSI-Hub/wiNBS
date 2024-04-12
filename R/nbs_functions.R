@@ -367,14 +367,15 @@ nbs_investigation_submit<-function(){
 nbs_investigation_go_to<-function(ID){
   ID<-as.character(ID)
   if(grepl('cas',ID,ignore.case=T)){
-    case_index<-remDr$getPageSource() %>% 
-      unlist() %>% 
-      read_html() %>% 
-      html_element(xpath='//*[@id="eventSumaryInv"]/tbody')  %>% 
-      html_text() %>% 
-      str_split('\nT\n') %>% unlist() %>% 
+    case_index<-remDr$getPageSource() %>%
+      unlist() %>%
+      read_html() %>%
+      html_element(xpath='//*[@id="eventSumaryInv"]/tbody')  %>%
+      html_text() %>%
+      str_split('\nT\n') %>% unlist() %>%
       str_which(ID)
-    remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$clickElement()
+    url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
+    remDr$navigate(unlist(url))
   }else{
     remDr$navigate(paste0("https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",ID))
   }
