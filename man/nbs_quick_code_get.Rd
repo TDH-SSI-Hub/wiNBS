@@ -16,6 +16,5 @@ nbs_quick_code_get(
 Quick code
 }
 \description{
-This function reverse searches for a quick code, given the information found in an NBS profile. This requires ODSE access and a properly formatted ODBC connection.
-If a code can't be found, it is set to 'nbs-bot'. Code searches and their results are stored in the qlist object, so subsequent searches for the same profile can use the archived info (faster).
+This function reverse searches for a quick code, given the information found in an NBS profile. This requires ODSE access and a properly formatted ODBC connection. If a code can't be found, it is set to 'nbs-bot'. Code searches and their results are stored in the qlist object, so subsequent searches for the same profile can use the archived info (faster).
 }

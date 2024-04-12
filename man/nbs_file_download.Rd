@@ -15,12 +15,11 @@ nbs_file_download(
 
 \item{outputname}{Desired name for downloaded file without extension}
 
-\item{url}{Base url for NBS instance
-(e.g., 'https://nbsproduction.tn.gov/nbs/')}
+\item{url}{Base url for NBS instance - e.g., 'https://nbsproduction.tn.gov/nbs/'}
 }
 \value{
 T/F if file downloaded
 }
 \description{
-Download documents accessed through links in NBS (e.g., attachments).
+Download documents accessed through links in NBS - e.g., attachments.
 }

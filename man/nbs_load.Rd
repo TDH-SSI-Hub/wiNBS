@@ -15,12 +15,12 @@ nbs_load(
 
 \item{environment}{Environment to enter}
 
-\item{url}{url for NBS login page (e.g., 'https://hssi.tn.gov/auth/login')}
+\item{url}{url for NBS login page - e.g., 'https://hssi.tn.gov/auth/login'}
 }
 \value{
 Nothing
 }
 \description{
 Navigate to the NBS login page, enter username and password
-, and enter the specified environment (defaults to production)
+, and enter the specified environment - defaults to production
 }

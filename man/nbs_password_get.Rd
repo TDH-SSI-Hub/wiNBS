@@ -13,5 +13,5 @@ nbs_password_get(username)
 NBS password
 }
 \description{
-Retrieves a password set with nbs_password_set().
+Retrieves a password set with nbs_password_set.
 }
