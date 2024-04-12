@@ -4,7 +4,7 @@
 \alias{edit_quick_code}
 \title{Edit the quick code on an investigation}
 \usage{
-edit_quick_code(id, val, pre_clear = F)
+edit_quick_code(id, val, pre_clear = F, ...)
 }
 \arguments{
 \item{id}{HTML ID for quick code field}
@@ -12,6 +12,8 @@ edit_quick_code(id, val, pre_clear = F)
 \item{val}{Quick code to enter}
 
 \item{pre_clear}{T/F. Should the quick code be cleared before attempting to enter the new value?}
+
+\item{...}{Arguments (environment) passed on to nbs_quick_code_get()}
 }
 \description{
 Edit the quick code on an investigation

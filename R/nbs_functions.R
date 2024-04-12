@@ -250,10 +250,11 @@ nbs_page_is_legacy <- function() {
 #' @param id HTML ID for quick code field
 #' @param val Quick code to enter
 #' @param pre_clear T/F. Should the quick code be cleared before attempting to enter the new value?
+#' @param ... Arguments (environment) passed on to nbs_quick_code_get() 
 #'
 #' @return NULL
 #' @export
-edit_quick_code<-function(id,val, pre_clear=F){
+edit_quick_code<-function(id,val, pre_clear=F, ...){
   
   if(pre_clear){
     if(remDr$findElement('id',paste0('clear',id))$getElementAttribute('class')!='none'){
@@ -263,7 +264,7 @@ edit_quick_code<-function(id,val, pre_clear=F){
   
   
   if(nchar(val)>10){
-   val<- nbs_quick_code_get(val)
+   val<- nbs_quick_code_get(val,...)
   }
   
   
@@ -461,10 +462,11 @@ nbs_field_get<-function(id,page_source=NA){
 #' @param value String. Value to send to the field.
 #' @param page String. The url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
+#' @param ... Arguments passed on to field setting function (currently just environment for edit_quick_code())
 #' 
 #' @return NULL
 #' @export
-nbs_field_set<-function(id, value, page=NA, check_tab=F){
+nbs_field_set<-function(id, value, page=NA, check_tab=F, ...){
     metadata<-nbs_page_metadata_get(page)
   
   metadata_row<-metadata$question_identifier==id|metadata$question_label==id
@@ -492,7 +494,7 @@ nbs_field_set<-function(id, value, page=NA, check_tab=F){
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
   }else if(field_type=='PART'){
-    edit_quick_code(field_id,value)
+    edit_quick_code(field_id,value,...)
   }else if(field_type=='NUMERIC'){
     edit_numeric(field_id,value)
   }else if(field_type=='DATE'){
