@@ -43,7 +43,7 @@ chrome_version<-function(chrome_loc="C:\\Program Files (x86)\\Google\\Chrome\\Ap
 #' @param print_to Folder location for downloads (only needed when printing pdfs or downloading files).
 #' @return Chrome browser object
 #' @export
-chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=NA){
+chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getwd()){
   
   if(exists('rD')) rm('rD',pos = 1)
   if(exists('remDr')) rm('remDr',pos = 1)
@@ -83,7 +83,6 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=NA){
 #' Close the 'remDr' browser. If multiple sessions are running concurrently,
 #' kill_java must be FALSE.
 #'
-#' @param browser Browser object created by chrome_open_browser()
 #' @param kill_java Close all java instances (can affect external processes)
 #' @return Nothing
 #' @export
@@ -104,4 +103,103 @@ chrome_window_switch <- function( windowId) {
   qpath <- sprintf("%s/session/%s/window", remDr$serverURL, remDr$sessionInfo[["id"]])
   remDr$queryRD(qpath, "POST", qdata = list(handle = windowId))
 }
+
+#' Switch to a new tab
+#'
+#' @param windowId Window ID for destination tab.
+#' @return Nothing
+#' @export
+window_switch <- function( windowId=NA) {
+  if(is.na(windowId)){
+    home.window <- remDr$getCurrentWindowHandle()[[1]]
+    all.window <- remDr$getWindowHandles()
+    windowId <- all.window[!all.window %in% home.window][[1]]
+  }
+  if(length(windowId)==1){
+  qpath <- sprintf("%s/session/%s/window", remDr$serverURL, remDr$sessionInfo[["id"]])
+  remDr$queryRD(qpath, "POST", qdata = list(handle = windowId))
+  }else if(length(windowId)==0){
+    message('No window to switch to.')
+  }else if(length(windowId)>10){
+    message('Too many windows open to auto detect windowId. Please specify windowId parameter.')
+  }
+}
+
+
+#' Open a Firefox browser
+#'
+#' Opens a Firefox browser ('remDr') on the designated port. When multiple sessions are
+#' running concurrently, each session must have a different port, and kill_java
+#' must be FALSE.
+#'
+#' @param kill_java Close all java instances prior to running (can affect external processes).
+#' @param port Port to use for browser. If NA, uses freeport().
+#' @return Firefox browser object
+#' @export
+firefox_open_browser<-function(kill_java=T, port=NA){
+  if (exists("rD")) 
+    rm("rD", pos = 1)
+  if (exists("remDr")) 
+    rm("remDr", pos = 1)
+  
+  if (is.na(port)) {
+    port <- parallelly::freePort()
+  }
+  while (!exists("rD")) {
+    tryCatch({
+      if (kill_java) 
+        system("taskkill /im java.exe /f", ignore.stderr = T, 
+               show.output.on.console = F)
+      rD <<- RSelenium::rsDriver(browser = "firefox", port = port
+                                 , verbose = F
+                                 , chromever = NULL
+      )
+      remDr <<- rD[["client"]]
+    }, message = function(e) {
+      rm("rD", pos = 1)
+      rm("remDr", pos = 1)
+    })
+  }
+  remDr$setTimeout(type = "implicit", milliseconds = 4000)
+  message("Browser 'remDr' created")
+}
+
+#' Open a web browser
+#'
+#' Opens a Chrome or Firefox browser ('remDr') on the designated port. When multiple sessions are
+#' running concurrently, each session must have a different port, and kill_java
+#' must be FALSE.
+#'
+#' @param kill_java Close all java instances prior to running (can affect external processes).
+#' @param port Port to use for browser. If NA, uses freeport().
+#' @param ... Additonal arguments passed on to chrome_open_browser().
+#' @return Nothing, but browser remDr is created in global environment.
+#' @export
+browser_open<-function(browser_type='Chrome',kill_java=T, port=NA, ...){
+  if(tolower(browser_type)=='chrome'){
+    chrome_open_browser(kill_java,port,...)
+  }else if(tolower(browser_type)=='firefox'){
+    firefox_open_browser(kill_java,port)
+  }else{
+    message("browser_type must be one of 'Chrome' or 'Firefox'")
+  }
+}
+
+#' Close a browser
+#'
+#' Close the 'remDr' browser. If multiple sessions are running concurrently,
+#' kill_java must be FALSE or else all other sessions will be interrupted as well.
+#'
+#' @param kill_java Close all java instances (can affect external processes)
+#' @return Nothing
+#' @export
+browser_close<-function(kill_java=T){
+  remDr$close()
+  rD$server$stop()
+  rm(remDr, envir = globalenv())
+  rm(rm, envir = globalenv())
+  if(kill_java)  system("taskkill /im java.exe /f", ignore.stderr=T,show.output.on.console = F)
+  message("Browser 'remDr' closed")
+}
+
 
