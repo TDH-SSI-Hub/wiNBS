@@ -4,7 +4,12 @@
 \alias{chrome_open_browser}
 \title{Open a Chrome browser}
 \usage{
-chrome_open_browser(kill_java = T, port = NA, chrome_ver = NA, print_to = NA)
+chrome_open_browser(
+  kill_java = T,
+  port = NA,
+  chrome_ver = NA,
+  print_to = getwd()
+)
 }
 \arguments{
 \item{kill_java}{Close all java instances (can affect external processes)}
