@@ -111,7 +111,7 @@ global environment).
 # Go to patient with investigation CAS12345678
 nbs_search('CAS12345678')
 
-# Go to patient with lab CAS12345678
+# Go to patient with lab OBS12345678
 nbs_search('OBS12345678', ID_type = 'Lab ID')
 
 # Go to investigation CAS12345678
@@ -203,3 +203,4 @@ new_county<-nbs_field_get('DEM165')
 - Add printing to Firefox
 - Add checks after submit
 - Increase functionality around labs/morbs/case reports.
+- Direct patient search
