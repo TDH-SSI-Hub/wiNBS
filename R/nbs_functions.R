@@ -166,7 +166,7 @@ nbs_queue_filter <- function(dropdown, search_for, grepl = F, select_all = F) {
 nbs_pdf_print <- function(pdfname, folder = NA, legacy_print = F) {
   download_location <- remDr$extraCapabilities$chromeOptions$prefs$savefile.default_directory
   if (is.null(download_location)) {
-    message("ERROR: No download directory set. Set print_to argument in chrome_open_browser()")
+    message("ERROR: No download directory set. Set print_to parameter.")
   } else {
 
     if (legacy_print) {
@@ -369,11 +369,11 @@ nbs_investigation_submit<-function(){
 #' 
 #' @param ID A case ID. Required if this function is called from outside the patient page.
 #' @param uid The case uid. Providing a uid may be slightly faster.
-#' @param environment What environment does this occur in? Only needed if this may be called from outside NBS (requiring login) or if uid is supplied.
+#' @param patient_page Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.
 #'
 #' @return Nothing
 #' @export
-nbs_investigation_go_to<-function(ID=NA,uid=NA,environment='NBS Production'){
+nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
   ID<-as.character(ID)
   uid<-as.character(uid)
   if(sum(is.na(c(ID,uid)))==2){
@@ -381,12 +381,9 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,environment='NBS Production'){
     return(NA)
   }
   
-  if(remDr$getTitle()!="View Patient File"){
+  if(patient_page){
   
   if(!is.na(ID)){
-  if (!grepl('nbs',remDr$getCurrentUrl())){
-    nbs_load(username,environment)
-  }
     if(remDr$getTitle()!="NBS Dashboard") nbs_home_page()
       nbs_search(ID)
   }else{
@@ -420,12 +417,14 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,environment='NBS Production'){
 #' @return Nothing
 #' @export
 nbs_investigation_edit<-function(){
-  notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()!=''
-  # This is the edit button for most accounts, not the delete button
-  remDr$findElement("id", 'delete')$clickElement()
-  # Accept the alert if there is one
-  if(notification){remDr$acceptAlert()
-  Sys.sleep(.5)
+  nbs_investigation_edit<-function(){
+    notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()
+    # This is the edit button for most accounts, not the delete button
+    remDr$findElement("id", 'delete')$clickElement()
+    # Accept the alert if there is one
+    if(!notification %in% c('','REJECTED')){remDr$acceptAlert()
+      Sys.sleep(.5)
+    }
   }
 }
 
@@ -459,16 +458,22 @@ nbs_field_get<-function(id,page_source=NA){
 #' 
 #' @param id String. HTML ID or metadata label for field.
 #' @param value String. Value to send to the field.
-#' @param page String. The url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
+#' @param metadata Can be one of several things. A dataframe pulled from nbs_page_metadata_get(), the url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
 #' @param ... Arguments passed on to field setting function (currently just environment for edit_quick_code())
 #' 
 #' @return NULL
 #' @export
-nbs_field_set<-function(id, value, page=NA, check_tab=F, ...){
-    metadata<-nbs_page_metadata_get(page)
+nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
   
-  metadata_row<-metadata$question_identifier==id|metadata$question_label==id
+  if(class(metadata)=='data.frame'){
+    
+  }else{
+    metadata<-nbs_page_metadata_get(metadata)
+  }
+  
+  metadata<-metadata[!is.na(metadata$question_identifier),]
+  metadata_row<-metadata$question_identifier==id
   
   field_type<-toupper(metadata$data_type[metadata_row])
   field_id<-metadata$question_identifier[metadata_row]
@@ -479,16 +484,17 @@ nbs_field_set<-function(id, value, page=NA, check_tab=F, ...){
       rvest::html_nodes(xpath=paste0('//*[@id="',field_id,'"]'))
     tab_id<-gsub('tabs0tab','tabs0head',find_ancestor(test_x,'id','tabs0tab\\d'))
     tab_index<-as.numeric(substr(tab_id,nchar(tab_id),nchar(tab_id)))+1
-    tab_info<-ps %>% 
-      html_element(xpath=paste0('//*[@id="',tab_id,'"]')) %>% 
+    tab_info<-ps %>%
+      html_element(xpath=paste0('//*[@id="',tab_id,'"]')) %>%
       html_attr('class')
     if(tab_info!='ongletTextEna'){
       #message(paste0('Switching to tab ',tab_index))
       remDr$findElement('xpath',paste0('//*[@id="',tab_id,'"]'))$clickElement()
     }
   }
-  
-  if(field_type=='CODED'){
+  if(is.na(field_type)){
+    message('No field type.')
+  }else if(field_type=='CODED'){
     edit_text_field(id=field_id, val=value)
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
@@ -696,3 +702,13 @@ nbs_quick_code_search<-function(id,value,id_type='Person', add=T){
   }
   
 }
+
+
+nbs_patient_search<-function(id){
+  remDr$findElement('id','DEM229')$sendKeysToElement(list(as.character(id)))
+  remDr$executeScript('searchPatient();')
+  remDr$findElement('xpath','//*[@id="searchResultsTable"]/tbody/tr/td[1]/a')$clickElement()
+}
+
+
+

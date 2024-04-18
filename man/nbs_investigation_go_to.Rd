@@ -4,14 +4,14 @@
 \alias{nbs_investigation_go_to}
 \title{Go to an investigation from a patient page}
 \usage{
-nbs_investigation_go_to(ID = NA, uid = NA, environment = "NBS Production")
+nbs_investigation_go_to(ID = NA, uid = NA, patient_page = F)
 }
 \arguments{
 \item{ID}{A case ID. Required if this function is called from outside the patient page.}
 
 \item{uid}{The case uid. Providing a uid may be slightly faster.}
 
-\item{environment}{What environment does this occur in? Only needed if this may be called from outside NBS (requiring login) or if uid is supplied.}
+\item{patient_page}{Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.}
 }
 \value{
 Nothing

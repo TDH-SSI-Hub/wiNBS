@@ -124,7 +124,7 @@ From the home page, you can load a queue using the partial link text
 (see below). In the future, this can be made into a convenience function
 as well. Once inside the queue, you can use `nbs_queue_filter()` to
 activate the filters for any column that uses check boxes as options. By
-default, the text found in `search_for` is sued to find an exact match
+default, the text found in `search_for` is used to find an exact match
 in the UI options. You may set `grepl=TRUE` to employ pattern matching
 instead. Note that the `select_all` parameter affects if the ‘Select
 All’ option gets clicked prior to selection of other options. ‘Select

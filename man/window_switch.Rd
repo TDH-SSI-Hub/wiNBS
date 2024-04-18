@@ -4,10 +4,14 @@
 \alias{window_switch}
 \title{Switch to a new tab}
 \usage{
-window_switch(windowId = NA)
+window_switch(windowId = NA, close_old = F, verbose = F)
 }
 \arguments{
 \item{windowId}{Window ID for destination tab.}
+
+\item{close_old}{T/F. Should the old window be closed?}
+
+\item{verbose}{T/F. Should the new window title be printed?}
 }
 \value{
 Nothing
