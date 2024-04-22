@@ -374,7 +374,7 @@ nbs_home_page<-function(check_legacy=F){
 nbs_investigation_submit<-function(check_submission=T){
   remDr$findElement("id", "SubmitTop")$clickElement()
   if(check_submission){
-  remDr$getPageSource() %>% unlist()
+  remDr$getPageSource() %>% unlist() %>% 
     read_html() %>% 
     html_element('#globalFeedbackMessagesBar') %>% 
     html_text() %>% str_replace_all('\n','') %>% str_trim() %>% unlist()
@@ -430,7 +430,6 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
 #' @return Nothing
 #' @export
 nbs_investigation_edit<-function(){
-  nbs_investigation_edit<-function(){
     notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()
     # This is the edit button for most accounts, not the delete button
     remDr$findElement("id", 'delete')$clickElement()
@@ -438,7 +437,6 @@ nbs_investigation_edit<-function(){
     if(!notification %in% c('','REJECTED')){remDr$acceptAlert()
       Sys.sleep(.5)
     }
-  }
 }
 
 #' Retrieve field from an investigation page
@@ -512,7 +510,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
   }else if(field_type=='PART'){
-    edit_quick_code(field_id,value,...)
+    edit_quick_code(field_id,value)
   }else if(field_type=='NUMERIC'){
     edit_numeric(field_id,value)
   }else if(field_type=='DATE'){
