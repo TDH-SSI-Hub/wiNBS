@@ -351,18 +351,34 @@ nbs_page_metadata_get<-function(page=NA){
 
 #' Go to the NBS home page
 #'
+#' @param check_legacy T/F. If TRUE, checks if the page is legacy before clicking the home button, since legacy pages need slightly different code.
+#'
 #' @return Nothing
 #' @export
-nbs_home_page<-function(){
-  remDr$findElements("class", "navLink")[[1]]$clickElement()
+nbs_home_page<-function(check_legacy=F){
+  pclass<- "navLink"
+  if(check_legacy){
+    if(nbs_page_is_legacy()){
+      pclass<-'navBar'
+    }
+  }
+  remDr$findElements("class", pclass)[[1]]$clickElement()
 }
 
 #' Submit changes to an investigation
 #'
+#' @param check_submission T/F. Should the feedback bar text be returned?
+#'
 #' @return Nothing
 #' @export
-nbs_investigation_submit<-function(){
+nbs_investigation_submit<-function(check_submission=T){
   remDr$findElement("id", "SubmitTop")$clickElement()
+  if(check_submission){
+  remDr$getPageSource() %>% unlist()
+    read_html() %>% 
+    html_element('#globalFeedbackMessagesBar') %>% 
+    html_text() %>% str_replace_all('\n','') %>% str_trim() %>% unlist()
+  }
 }
 
 #' Go to an investigation from a patient page
@@ -374,6 +390,7 @@ nbs_investigation_submit<-function(){
 #' @return Nothing
 #' @export
 nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
+  
   ID<-as.character(ID)
   uid<-as.character(uid)
   if(sum(is.na(c(ID,uid)))==2){
@@ -383,13 +400,9 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
   
   if(patient_page){
   
-  if(!is.na(ID)){
-    if(remDr$getTitle()!="NBS Dashboard") nbs_home_page()
-      nbs_search(ID)
   }else{
-    message('ID must be supplied if not called from patient file')
-    return(NA)
-  }
+    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page()}
+    nbs_search(ID)
   }
   
   if(is.na(uid)){
@@ -398,7 +411,7 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
       read_html() %>%
       html_element(xpath='//*[@id="eventSumaryInv"]/tbody')  %>%
       html_text() %>%
-      str_split('\nT\n') %>% unlist() %>%
+      str_split('\nT\n|\nF\n') %>% unlist() %>%
       str_which(ID)
     url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))

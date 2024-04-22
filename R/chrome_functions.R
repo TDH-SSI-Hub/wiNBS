@@ -149,6 +149,8 @@ firefox_open_browser<-function(kill_java=T, port=NA){
   
   if (is.na(port)) {
     port <- parallelly::freePort()
+  }else{
+    port<-as.integer(port)
   }
   while (!exists("rD")) {
     tryCatch({

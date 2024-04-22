@@ -4,7 +4,10 @@
 \alias{nbs_home_page}
 \title{Go to the NBS home page}
 \usage{
-nbs_home_page()
+nbs_home_page(check_legacy = F)
+}
+\arguments{
+\item{check_legacy}{T/F. If TRUE, checks if the page is legacy before clicking the home button, since legacy pages need slightly different code.}
 }
 \value{
 Nothing

@@ -4,7 +4,10 @@
 \alias{nbs_investigation_submit}
 \title{Submit changes to an investigation}
 \usage{
-nbs_investigation_submit()
+nbs_investigation_submit(check_submission = T)
+}
+\arguments{
+\item{check_submission}{T/F. Should the feedback bar text be returned?}
 }
 \value{
 Nothing
