@@ -5,7 +5,7 @@
 \alias{page_metadata}
 \title{Dataframe of investigation page metadata}
 \format{
-An object of class \code{data.frame} with 18065 rows and 62 columns.
+An object of class \code{data.frame} with 18385 rows and 27 columns.
 }
 \usage{
 page_metadata

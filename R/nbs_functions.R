@@ -472,7 +472,6 @@ nbs_field_get<-function(id,page_source=NA){
 #' @param value String. Value to send to the field.
 #' @param metadata Can be one of several things. A dataframe pulled from nbs_page_metadata_get(), the url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
-#' @param ... Arguments passed on to field setting function (currently just environment for edit_quick_code())
 #' 
 #' @return NULL
 #' @export
@@ -480,14 +479,17 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
   
   if(class(metadata)=='data.frame'){
     
-  }else{
+  }else if(class(metadata)=='character'){
     metadata<-nbs_page_metadata_get(metadata)
+  }else{
+    nbs_page_metadata_get()
   }
   
   metadata<-metadata[!is.na(metadata$question_identifier),]
   metadata_row<-metadata$question_identifier==id
   
   field_type<-toupper(metadata$data_type[metadata_row])
+  input_type<-toupper(metadata$type_cd_desc[metadata_row])
   field_id<-metadata$question_identifier[metadata_row]
   
   if(check_tab){
@@ -504,12 +506,14 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
       remDr$findElement('xpath',paste0('//*[@id="',tab_id,'"]'))$clickElement()
     }
   }
-  if(is.na(field_type)){
+  if(length(field_type)==0){
+    message('Could not find question in metadata.')
+  }else if(is.na(field_type)){
     message('No field type.')
+  }else if(field_type=='TEXT'|input_type=='MULTI-SELECT (LIST BOX)'){
+    edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
   }else if(field_type=='CODED'){
     edit_text_field(id=field_id, val=value)
-  }else if(field_type=='TEXT'){
-    edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
   }else if(field_type=='PART'){
     edit_quick_code(field_id,value)
   }else if(field_type=='NUMERIC'){
