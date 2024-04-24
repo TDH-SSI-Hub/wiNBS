@@ -416,8 +416,9 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
     url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))
   }else{
+    remDr$getCurrentUrl()
     base_url<-"https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID="
-    if(environment=='NBS Staging') base_url<-gsub('production','staging',base_url)
+    if(grepl('staging',unlist(remDr$getCurrentUrl()))) base_url<-gsub('production','staging',base_url)
     remDr$navigate(paste0(base_url,uid))
   }
 
