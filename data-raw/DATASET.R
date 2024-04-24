@@ -34,7 +34,8 @@ page_metadata<-sqlQuery(prod,"SELECT [investigation_form_cd]
   left join [nbs_odse].[dbo].[NBS_metadata_rule] r
   on m.nbs_ui_component_uid = r.component_uid
   left join [nbs_odse].[dbo].NBS_ui_component c
-  on m.nbs_ui_component_uid = c.nbs_ui_component_uid")
+  on m.nbs_ui_component_uid = c.nbs_ui_component_uid
+  where question_identifier is not null and question_identifier <> '------'")
 use_data(page_metadata, overwrite = T)
 
 condition_metadata<-sqlQuery(prod,"select * from [nbs_srte].[dbo].[Condition_code]")
