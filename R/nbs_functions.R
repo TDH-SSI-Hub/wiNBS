@@ -105,6 +105,17 @@ nbs_file_download <- function(element, outputname, url = "https://nbsproduction.
   return(attachment.exists)
 }
 
+#' Navigate to a queue
+#'
+#' Navigate to a queue
+#'
+#' @param queue Name of the queue to load
+#' @return Nothing
+#' @export
+nbs_queue_load<-function(queue){
+  if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page()}
+  remDr$findElement('partial link text',queue)$clickElement()
+}
 
 #' Filter queue dropdown
 #'
@@ -134,6 +145,50 @@ nbs_queue_filter <- function(dropdown, search_for, grepl = F, select_all = F) {
       }
     } else {
       if (grepl(search_for, unlist(options[[r]]$getElementText()), ignore.case = T)) {
+        options[[r]]$clickElement()
+      }
+    }
+  }
+  remDr$executeScript("selectfilterCriteria();")
+}
+
+#' Filter queue dropdown from supervisor queue
+#'
+#' Open a queue's dropdown filter and select specified elements.
+#' When grepl = T, many results may be selected using regex pattern matching.
+#' When select_all = T, the 'Select all' option is clicked, which reverses the
+#' selection
+#'
+#' @param dropdown Number representing which dropdown to use (1 is far left)
+#' @param search_for Pattern to match in dropdown options
+#' @param grepl T/F whether to match multiple options by regex pattern, or
+#' match one option exactly
+#' @param select_all T/F whether to uncheck select all prior to matching
+#' @return None
+#' @export
+nbs_queue_filter_supervisor <- function (dropdown, search_for, grepl = F, select_all = F) {
+  
+  dd<-remDr$findElements("class", "multiSelect")[[dropdown]]
+  dd_id<-gsub('ig','',unlist(dd$getElementAttribute('id')))
+  dd$clickElement()
+  
+  option_names<-unlist(str_split(remDr$findElement('id',dd_id)$getElementText(),'\n '))
+  options<-remDr$findElement('id',dd_id)$findChildElements('tag name','input')
+  
+  if (select_all) {
+    options[[1]]$clickElement()
+  }
+  
+  
+  for (r in 2:length(options)) {
+    if (!grepl) {
+      if (option_names[r] == search_for) {
+        options[[r]]$clickElement()
+        break
+      }
+    }
+    else {
+      if (grepl(search_for, option_names[r], ignore.case = T)) {
         options[[r]]$clickElement()
       }
     }
