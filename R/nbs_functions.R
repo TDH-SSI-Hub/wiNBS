@@ -211,11 +211,77 @@ nbs_queue_contains<-function(dropdown,search_for){
     read_html() %>% 
     html_nodes('#queueIcon')
   
-  axpath<-find_ancestor_xpath(dropdowns[dropdown],'class','sortable')
+  axpath<-find_ancestor_xpath(dropdowns[[dropdown]],'class','sortable')
   axpath<-gsub('table\\[4\\]','table[3]',axpath)
   remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
   remDr$findElement('xpath',axpath )$findChildElements('tag name','input')[[3]]$sendKeysToElement(list(search_for))
   remDr$executeScript("selectfilterCriteria();")
+}
+
+#' Select a link or checkbox in a queue
+#'
+#' Select a link or checkbox in a queue
+#'
+#' @param row Row to select
+#' @param column Column to select (includes checkbox column)
+#' 
+#' @return None
+#' @export
+nbs_queue_row_click<-function(row=1, col=1){
+  
+  if(row%%2==0){
+    row_class<-'even'
+    row<-row/2
+  }else{
+    row_class<-'odd'
+    row<-row/2+1
+  }
+  
+  cur_element<-remDr$getPageSource() %>% unlist() %>% read_html() %>% 
+    html_elements(paste0('.',row_class)) %>% 
+    .[row] %>% 
+    html_children() %>% 
+    .[col] %>% html_children()
+  cur_el_attr<-unlist(html_attrs(cur_element))
+  if('checkbox' %in% cur_el_attr | '#' %in% cur_el_attr) {
+    remDr$findElement('xpath',gsub('table\\[4\\]','table[3]',xml_path(cur_element)[1]))$clickElement()
+  }else{
+    message('Nothing to click')
+  }
+}
+
+#' Get information from a queue row
+#'
+#' Get information from a queue row
+#'
+#' @param row Row to select
+#' 
+#' @return Named character vector of row data
+#' @export
+nbs_queue_row_info<-function(row=1){
+  if(row%%2==0){
+    row_class<-'even'
+    row<-row/2
+  }else{
+    row_class<-'odd'
+    row<-row/2+1
+  }
+  cnames<-remDr$findElements('class','sortable')
+  cnames<-unlist(sapply(cnames, function(x) x$getElementText()))
+  rdata<-unlist(lapply(remDr$findElements('class',row_class)[[row]]$findChildElements('tag name','td'), function(x) x$getElementText()))
+  names(rdata)<-c('checkbox',cnames)
+  rdata
+}
+
+
+#' Return to a queue
+#'
+#' Return to a queue
+#' 
+#' @return None
+#' @export
+nbs_queue_return<-function(){
+  remDr$findElement('partial link text','Return to')$clickElement()
 }
 
 
