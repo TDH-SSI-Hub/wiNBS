@@ -217,6 +217,22 @@ find_ancestor<-function(x,attr,val){
 }
 
 
+#' Find an ancestor by attribute
+#'
+#' @param x html to search
+#' @param attr Attribute to extract
+#' @param val Pattern to search for
+#'
+#' @return xpath of attribute
+#' @export
+find_ancestor_xpath<-function(x,attr,val){
+  parents<-xml2::xml_parents(x[[1]]) 
+  parent_bool<-parents %>% xml_attr(attr)  %>% str_detect(val)
+  parent_bool[is.na(parent_bool)]<-F
+  parents[parent_bool][1] %>% xml_path()
+}
+
+
 #' @import xml2
 #' @import magrittr
 #' @import RSelenium

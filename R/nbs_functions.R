@@ -196,6 +196,30 @@ nbs_queue_filter_supervisor <- function (dropdown, search_for, grepl = F, select
   remDr$executeScript("selectfilterCriteria();")
 }
 
+#' Filters queue columns that use a contains string search
+#'
+#' Filters queue columns that use a contains string search
+#'
+#' @param dropdown Number representing which dropdown to use (1 is far left)
+#' @param search_for Pattern to match in dropdown options
+#' 
+#' @return None
+#' @export
+nbs_queue_contains<-function(dropdown,search_for){
+  dropdowns<-remDr$getPageSource() %>% 
+    unlist() %>% 
+    read_html() %>% 
+    html_nodes('#queueIcon')
+  
+  axpath<-find_ancestor_xpath(dropdowns[dropdown],'class','sortable')
+  axpath<-gsub('table\\[4\\]','table[3]',axpath)
+  remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
+  remDr$findElement('xpath',axpath )$findChildElements('tag name','input')[[3]]$sendKeysToElement(list(search_for))
+  remDr$executeScript("selectfilterCriteria();")
+}
+
+
+
 #' Print the current page as a pdf
 #'
 #' Prints the current NBS page as a pdf. The pdf is initially saved in the
