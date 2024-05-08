@@ -627,7 +627,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
   }else if(class(metadata)=='character'){
     metadata<-nbs_page_metadata_get(metadata)
   }else{
-    nbs_page_metadata_get()
+    metadata<-nbs_page_metadata_get()
   }
   
   metadata<-metadata[!is.na(metadata$question_identifier),]
