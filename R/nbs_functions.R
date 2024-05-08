@@ -154,7 +154,7 @@ nbs_queue_filter <- function(dropdown, search_for, grepl = F, select_all = F) {
     html_elements('div') %>% html_attr('class')
   
   if('multiTextOptions' %in% hclass){
-    nbs_queue_contains(dropdown,search_for,ps)
+    queue_contains(dropdown,search_for,ps)
   }else{
     
     remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
