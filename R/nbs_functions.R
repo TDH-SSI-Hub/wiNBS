@@ -211,7 +211,7 @@ nbs_queue_contains<-function(dropdown,search_for){
     read_html() %>% 
     html_nodes('#queueIcon')
   
-  axpath<-find_ancestor_xpath(dropdowns[[dropdown]],'class','sortable')
+  axpath<-find_ancestor_xpath(dropdowns[dropdown],'class','sortable')
   axpath<-gsub('table\\[4\\]','table[3]',axpath)
   remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
   remDr$findElement('xpath',axpath )$findChildElements('tag name','input')[[3]]$sendKeysToElement(list(search_for))
