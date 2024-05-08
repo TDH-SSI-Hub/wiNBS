@@ -2,7 +2,7 @@
 % Please edit documentation in R/nbs_functions.R
 \name{nbs_queue_filter}
 \alias{nbs_queue_filter}
-\title{Filter queue dropdown}
+\title{Filter queue}
 \usage{
 nbs_queue_filter(dropdown, search_for, grepl = F, select_all = F)
 }
@@ -23,5 +23,5 @@ None
 Open a queue's dropdown filter and select specified elements.
 When grepl = T, many results may be selected using regex pattern matching.
 When select_all = T, the 'Select all' option is clicked, which reverses the
-selection
+selection. If the dropdown is a text match, grepl and select_all are ignored.
 }

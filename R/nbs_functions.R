@@ -117,12 +117,12 @@ nbs_queue_load<-function(queue){
   remDr$findElement('partial link text',queue)$clickElement()
 }
 
-#' Filter queue dropdown
+#' Filter queue
 #'
 #' Open a queue's dropdown filter and select specified elements.
 #' When grepl = T, many results may be selected using regex pattern matching.
 #' When select_all = T, the 'Select all' option is clicked, which reverses the
-#' selection
+#' selection. If the dropdown is a text match, grepl and select_all are ignored.
 #'
 #' @param dropdown Number representing which dropdown to use (1 is far left)
 #' @param search_for Pattern to match in dropdown options
@@ -132,24 +132,51 @@ nbs_queue_load<-function(queue){
 #' @return None
 #' @export
 nbs_queue_filter <- function(dropdown, search_for, grepl = F, select_all = F) {
-  remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
-  options <- remDr$findElements("class", "sortable")[[dropdown]]$findChildElements("class", "pText")
-  if (select_all) {
-    remDr$findElements("class", "sortable")[[dropdown]]$findChildElement("class", "selectAll")$clickElement()
+  ps<-remDr$getPageSource() %>%
+    unlist() %>%
+    read_html()
+  
+  if(is.numeric(dropdown)){
+    
+  }else{
+    filter_names<-ps %>% html_elements('.sortable') %>% html_elements('a') %>% html_text()
+    dropdown<-which(filter_names==dropdown)
   }
-  for (r in 1:length(options)) {
-    if (!grepl) {
-      if (unlist(options[[r]]$getElementText()) == search_for) {
-        options[[r]]$clickElement()
-        break
-      }
-    } else {
-      if (grepl(search_for, unlist(options[[r]]$getElementText()), ignore.case = T)) {
-        options[[r]]$clickElement()
+  
+  if(length(dropdown)!=1){
+    message('Filter not found')
+    return(NA)
+  }
+  
+  hps<-ps %>% html_elements('.sortable') %>% .[dropdown]
+  
+  hclass<- hps %>%
+    html_elements('div') %>% html_attr('class')
+  
+  if('multiTextOptions' %in% hclass){
+    nbs_queue_contains(dropdown,search_for,ps)
+  }else{
+    
+    remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
+    options <- remDr$findElements("class", "sortable")[[dropdown]]$findChildElements("class", "pText")
+    option_text<-hps %>% html_elements('.pText') %>% html_text()
+    if (select_all) {
+      remDr$findElements("class", "sortable")[[dropdown]]$findChildElement("class", "selectAll")$clickElement()
+    }
+    for (r in 1:length(options)) {
+      if (!grepl) {
+        if (option_text[r]== search_for) {
+          options[[r]]$clickElement()
+          break
+        }
+      } else {
+        if (grepl(search_for, option_text[r], ignore.case = T)) {
+          options[[r]]$clickElement()
+        }
       }
     }
+    remDr$executeScript("selectfilterCriteria();")
   }
-  remDr$executeScript("selectfilterCriteria();")
 }
 
 #' Filter queue dropdown from supervisor queue
@@ -204,15 +231,14 @@ nbs_queue_filter_supervisor <- function (dropdown, search_for, grepl = F, select
 #' @param search_for Pattern to match in dropdown options
 #' 
 #' @return None
-#' @export
-nbs_queue_contains<-function(dropdown,search_for){
-  dropdowns<-remDr$getPageSource() %>% 
-    unlist() %>% 
-    read_html() %>% 
+queue_contains<-function(dropdown,search_for,pagesource){
+  dropdowns<-pagesource %>%
     html_nodes('#queueIcon')
   
   axpath<-find_ancestor_xpath(dropdowns[dropdown],'class','sortable')
-  axpath<-gsub('table\\[4\\]','table[3]',axpath)
+  axsub <- as.numeric(str_extract(str_extract(axpath,"table\\[\\d\\]" ),'\\d'))
+  naxsub<-paste0('table[',axsub-1,']')
+  axpath <- gsub(paste0("table\\[",axsub,"\\]"), naxsub, axpath)
   remDr$findElements("id", "queueIcon")[[dropdown]]$clickElement()
   remDr$findElement('xpath',axpath )$findChildElements('tag name','input')[[3]]$sendKeysToElement(list(search_for))
   remDr$executeScript("selectfilterCriteria();")
