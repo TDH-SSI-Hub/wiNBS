@@ -311,6 +311,27 @@ nbs_queue_return<-function(){
 }
 
 
+#' Create a notification
+#'
+#' Create a notification
+#' 
+#' @param comment Comment to add to notification
+#' 
+#' @return None
+#' @export
+nbs_notification_create<- function(comment='Created by automated bot'){
+  remDr$executeScript('return createPamNotification();')
+  window_switch()
+  remDr$findElement('id','NTF137')$sendKeysToElement(list(comment))
+  remDr$executeScript('var opener = getDialogArgument();
+				var comments = getElementByIdOrByName("NTF137").value;
+				opener.createNotifications(comments);
+				var pview = getElementByIdOrByNameNode("pageview", opener.document)
+				pview.style.display = "none";')
+  window_switch(close_old = T)
+  Sys.sleep(.5)
+}
+
 
 #' Print the current page as a pdf
 #'
@@ -490,6 +511,62 @@ edit_numeric<-function(id, val){
   edit_text_field(id,as.character(val), id_suffix = '', id_type = 'id')
 }
 
+#' Edit a multiselect field
+#' 
+#' 
+#' @param id String. HTML ID for numeric field.
+#' @param values A vector of values to select
+#' @param options A vector of the possible options, in order. Autodetected if not provided, but this is slower. Make sure the first value for a provided vector is "".
+#' @param pre_clear T/F. Should current values be deselected prior to selection of values? Does not affect the other option
+#' @param other_clear T/F. Should the other option be deselected if pre_clear is TRUE? This will delete data in the other text field.
+#'
+#' @return NULL
+#' @export
+edit_multiselect<-function(id, values, options=NA, pre_clear=F, other_clear=F){
+  current_values<-unlist(remDr$findElement('id',paste0(id,'-selectedValues'))$getElementText()) %>% 
+    str_replace('Selected Values: ','') %>% 
+    str_split(', ') %>% 
+    unlist()
+  
+  current_values<-current_values[current_values!='Selected Values:']
+  
+  if(identical(options,NA)){
+    options<-remDr$getPageSource() %>% 
+      unlist() %>% 
+      read_html() %>% 
+      html_node(paste0('#',id)) %>% 
+      html_nodes('option') %>% 
+      html_text()
+  }
+  v<-values[1]
+  olist<-remDr$findElement('id',id)$findChildElements('tag name','option')
+  
+  other_index<-grep('other',options, ignore.case = T)[1]
+  other_option<-options[other_index]
+  
+  
+  if(pre_clear & length(current_values)>0){
+    for(cv in current_values){
+      if(cv==other_option & !other_clear) next
+      olist[[(1:length(options))[options==cv]]]$clickElement()
+    }
+  }
+  
+  for(v in values){
+    if(v %in% current_values & !pre_clear) next
+    if(!v %in% options){
+      if(!other_option %in% current_values){
+        olist[[other_index]]$clickElement()
+      }
+      remDr$findElement('id',paste0(id,'Oth'))$sendKeysToElement(list(paste0(' ',v)))
+    }else{
+      olist[[(1:length(options))[options==v]]]$clickElement()
+    }
+  }
+  
+  unlist(remDr$findElement('id',paste0(id,'-selectedValues'))$getElementText())
+}
+
 
 #' Retrieve page metadata for a given page
 #' 
@@ -644,6 +721,7 @@ nbs_field_get<-function(id,page_source=NA){
 #' @param metadata Can be one of several things. A dataframe pulled from nbs_page_metadata_get(), the url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
 #' 
+#' 
 #' @return NULL
 #' @export
 nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
@@ -681,8 +759,10 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     message('Could not find question in metadata.')
   }else if(is.na(field_type)){
     message('No field type.')
-  }else if(field_type=='TEXT'|input_type=='MULTI-SELECT (LIST BOX)'){
+  }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
+  }else if(input_type=='MULTI-SELECT (LIST BOX)'){
+    edit_multiselect(id=field_id,values=value)
   }else if(field_type=='CODED'){
     edit_text_field(id=field_id, val=value)
   }else if(field_type=='PART'){
