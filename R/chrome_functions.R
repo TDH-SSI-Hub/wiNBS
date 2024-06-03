@@ -184,6 +184,7 @@ firefox_open_browser<-function(kill_java=T, port=NA){
 #' @export
 browser_open<-function(browser_type='Chrome',kill_java=T, port=NA, ...){
   if(tolower(browser_type)=='chrome'){
+    ignore<-wdman::chrome(verbose=F)
     chrome_open_browser(kill_java,port,...)
   }else if(tolower(browser_type)=='firefox'){
     firefox_open_browser(kill_java,port)
@@ -191,6 +192,7 @@ browser_open<-function(browser_type='Chrome',kill_java=T, port=NA, ...){
     message("browser_type must be one of 'Chrome' or 'Firefox'")
   }
 }
+
 
 #' Close a browser
 #'
@@ -203,8 +205,8 @@ browser_open<-function(browser_type='Chrome',kill_java=T, port=NA, ...){
 browser_close<-function(kill_java=T){
   remDr$close()
   rD$server$stop()
-  rm(remDr, envir = globalenv())
-  rm(rm, envir = globalenv())
+  rm('remDr', envir = globalenv())
+  rm('rD', envir = globalenv())
   if(kill_java)  system("taskkill /im java.exe /f", ignore.stderr=T,show.output.on.console = F)
   message("Browser 'remDr' closed")
 }
