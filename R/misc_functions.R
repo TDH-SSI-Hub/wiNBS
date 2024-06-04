@@ -232,6 +232,75 @@ find_ancestor_xpath<-function(x,attr,val){
   parents[parent_bool][1] %>% xml_path()
 }
 
+#' Convert a vector into a string list for SQL queries
+#' @param vector Vector of values
+#' @param quote T/F Should the values be surrounded by quotes?
+#' @param unique T/F Should duplicate values be removed from the list?
+#' @export
+create_sql_list<-function(vector, quote=T, unique=T){
+  sep1<-ifelse(quote,"'","")
+  sep2<-ifelse(quote,"','",",")
+  if(unique) vector<-unique(vector)
+  return(paste0(sep1,paste0(vector, collapse = sep2),sep1))
+}
+
+
+#' Convert a local ID into a different ID
+#'
+#' @param local_id Patient, lab, case report, or invesigation local ID
+#' @param output_type What ID should be returned? "default" will autodetect the type.
+#' For labs, investigations, and case reports, the default type is observation_uid,
+#' public_health_case_uid, and nbs_document_uid, respectively. For patient local ID,
+#' the default return value is the search ID. You can get the patient_uid by specifying that in the output_type.
+#' Lab, case report, and person uids are only available if you specify an odbc connection 
+#' that has ODS permissions.
+#' @param odbc_name Name of a previously created odbc connection.
+#' @param ods T/F. Does the connection have access to the ODS? Set to F unless you need it.
+#'
+#' @return vector of IDs
+#' @export
+nbs_id_convert<-function(local_id, output_type='default', odbc_name='NBS_Prod', ods=F){
+  if(output_type == 'default'){
+    if(grepl('obs',local_id[1],ignore.case = T)){
+      output_type<-'observation_uid'
+      table<-ifelse(!ods,NA,'nbs_odse..observation')
+    }else if (grepl('cas',local_id[1],ignore.case = T)){
+      output_type<-'public_health_case_uid'
+      table<-ifelse(!ods,'rdb..PHCDemographic','nbs_odse..public_health_case')
+    }else if (grepl('doc',local_id[1],ignore.case = T)){
+      output_type<-'nbs_document_uid'
+      table<-ifelse(!ods,NA,'nbs_odse..nbs_document')
+    }else if (grepl('psn',local_id[1],ignore.case = T)){
+      output_type<-'patient ID'
+      table<-'yo mama'
+      psn_n<-stringr::str_extract(tolower(local_id),'\\d+')
+      message('Returning patient search ID')
+      return(sapply(psn_n, function(x) as.numeric(x)-10^(nchar(x)-1), USE.NAMES = F))
+    }else{
+      output_type<-NA
+    }
+  }else if(output_type=='person_uid'){
+    table<-ifelse(!ods,NA,'nbs_odse..person')
+  }
+  if(is.na(output_type)){
+    message('Could not determine default output type')
+    return(NA)
+  }else if(is.na(table)){
+    message('ID conversion for this ID type needs ODS access. Try ods=T if you have access.')
+    return(NA)
+  }else if(output_type=='patient ID'){
+    
+  }else if(output_type %in% c('observation_uid','public_health_case_uid','nbs_document_uid','nbs_document_uid')){
+    ocon<-RODBC::odbcConnect(odbc_name)
+    output_df<-RODBC::sqlQuery(ocon,paste0("select distinct ",output_type,", local_id from ",table," where local_id in (",create_sql_list(local_id),")"))
+    mdf<-merge(data.frame(local_id=local_id),output_df, all.x=T, sort=F)
+    message(paste0('Returning ',output_type))
+    mdf[,2][order(match(mdf[,1],local_id))] 
+  }else{
+    message('Output type not recognized')
+    return(NA)
+  }
+}
 
 #' @import xml2
 #' @import magrittr
