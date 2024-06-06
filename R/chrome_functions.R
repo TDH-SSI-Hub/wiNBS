@@ -30,6 +30,36 @@ chrome_version<-function(chrome_loc="C:\\Program Files (x86)\\Google\\Chrome\\Ap
   as.character(max(as.numeric_version(l6)))
 }
 
+#' Find best Chrome Driver for use
+#'
+#' Compares Chromedriver versions to Chrome version. 
+#' Orders driver versions by closeness to chrome version.
+#'
+#' @param limit How many versions should be returned?
+#' @return The closest compatible chromedriver versions
+#' @export
+chrome_driver_versions<-function(limit=5){
+  version_section<-function(v,s){
+    as.numeric(sapply(str_split(v,'\\.'), function(x) x[[s]]))
+  }
+  path <- utils::readRegistry("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe\\")
+  chrome_loc<-path[["(Default)"]]
+  chrome_loc<-gsub('\\\\','\\\\\\\\',chrome_loc)
+  l1<-system2(command = "wmic", args = paste0('datafile where name="',chrome_loc,'" get Version /value'), stdout = TRUE, stderr = TRUE)
+  l2<-stringr::str_extract(l1,pattern = "(?<=Version=)(\\d+\\.){3}\\d+$")
+  ref<-magrittr::extract(l2,!is.na(l2))
+  options<-binman::list_versions("chromedriver")[['win64']]
+  
+  ref_sections<-matrix(sapply(1:4, function(x) version_section(ref,x), simplify=T), nrow=1)
+  
+  vmatrix<-abs(sapply(1:4, function(x) version_section(options,x), simplify=T)-matrix(ref_sections,nrow=length(options), ncol=4, byrow = T))
+  
+  for(e in 1:4) vmatrix[,e]<-vmatrix[,e]*1000^(4-e)
+  
+  output<-options[order(apply(vmatrix,1,sum))]
+  return(output[1:min(limit,length(output))])
+}
+
 
 #' Open a Chrome browser
 #'
@@ -45,6 +75,9 @@ chrome_version<-function(chrome_loc="C:\\Program Files (x86)\\Google\\Chrome\\Ap
 #' @export
 chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getwd()){
   
+  # Download chromedrivers
+  temp<-wdman::chrome(verbose = F)
+  
   if(exists('rD')) rm('rD',pos = 1)
   if(exists('remDr')) rm('remDr',pos = 1)
   chrome_license_clear()
@@ -58,8 +91,9 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
     port<-parallelly::freePort()
   }
   
-  cver<-as.numeric_version(binman::list_versions("chromedriver")[[1]])
-  cver<-cver[order(cver, decreasing = T)]
+  #cver<-as.numeric_version(binman::list_versions("chromedriver")[[1]])
+  #cver<-cver[order(cver, decreasing = T)]
+  cver<-chrome_driver_versions()
   vtry<-0
   while(!exists('rD')){
     vtry<-vtry+1
@@ -77,6 +111,7 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
   remDr$setTimeout(type = "implicit", milliseconds = 4000)
   message("Browser 'remDr' created")
 }
+
 
 #' Close a Chrome browser
 #'
