@@ -103,9 +103,7 @@ dropdown. Direct patient search is not supported at this time.
 `nbs_search()` will take you to the patient landing page. To go to an
 investigation directly, use `nbs_investigation_go_to()`. This function
 will go directly to an investigation from anywhere in NBS (using the
-search functionality if needed). If you are not logged in to NBS, this
-function will call `nbs_load()` to log in (requires `username` object in
-global environment).
+search functionality if needed).
 
 ``` r
 # Go to patient with investigation CAS12345678
@@ -120,21 +118,20 @@ nbs_investigation_go_to('CAS12345678')
 
 ## Queues
 
-From the home page, you can load a queue using the partial link text
-(see below). In the future, this can be made into a convenience function
-as well. Once inside the queue, you can use `nbs_queue_filter()` to
-activate the filters for any column that uses check boxes as options. By
-default, the text found in `search_for` is used to find an exact match
-in the UI options. You may set `grepl=TRUE` to employ pattern matching
-instead. Note that the `select_all` parameter affects if the ‘Select
-All’ option gets clicked prior to selection of other options. ‘Select
-All’ is selected by default in the UI, and `select_all` is `FALSE` by
-default, so you must set `select_all` to `TRUE` in order to select only
-the option(s) specified in `search_for`.
+You can load a queue using `nbs_queue_load('queue name')`. Once inside
+the queue, you can use `nbs_queue_filter()` to activate the filters for
+any column that uses check boxes as options. By default, the text found
+in `search_for` is used to find an exact match in the UI options. You
+may set `grepl=TRUE` to employ pattern matching instead. Note that the
+`select_all` parameter affects if the ‘Select All’ option gets clicked
+prior to selection of other options. ‘Select All’ is selected by default
+in the UI, and `select_all` is `FALSE` by default, so you must set
+`select_all` to `TRUE` in order to select only the option(s) specified
+in `search_for`.
 
 ``` r
-# From home page, go to DRR
-remDr$findElement('partial link text','Document Requiring Review')$clickElement()
+# Go to DRR
+nbs_queue_load('Document Requiring Review')
 
 # For column 1 (document type), uncheck 'Select All', then select only the 'Lab Report' option
 nbs_queue_filter(1,'Lab Report', select_all=T)
@@ -144,6 +141,15 @@ nbs_queue_filter(5,'COV', grepl=T , select_all=T)
 
 # For column 6 (jurisdiction), deselect labs that are 'Out of State' or 'Out of System'
 nbs_queue_filter(6,'Out of', grepl=T , select_all=F)
+
+# Get info on the 5th row shown
+nbs_queue_row_info(5)
+
+# Click into the first row shown
+nbs_queue_row_click()
+
+# Go back to the queue from inside a lab/case
+nbs_queue_return()
 ```
 
 ## Labs
@@ -163,7 +169,7 @@ investigation. This metadata can be used to find the IDs for
 `nbs_field_get()` and also passed as a parameter in order to speed up
 the function. `nbs_field_get()` will return the current value, if any,
 for a given field. This function only works from the ‘View
-Investigation’ page, not the ‘Edit Investigation’ page, althought this
+Investigation’ page, not the ‘Edit Investigation’ page, although this
 functionality may be added later.
 
 To edit an investigation, you can use `nbs_investigation_edit()` to
@@ -175,7 +181,9 @@ check that the correct tab is selected before editing the field using
 tab checks/changes can greatly speed up scripts with lots of edits.
 `nbs_field_set()` uses the page metadata to determine what type of field
 is being edited, then calls the correct sub-function. When edits are
-complete, use `nbs_investigation_submit()` to submit the changes.
+complete, use `nbs_investigation_submit()` to submit the changes. This
+function does return text from the global message status bar (green if
+submission is successful, red if there are errors).
 
 ``` r
 # Load investigation
@@ -190,8 +198,8 @@ nbs_investigation_edit()
 # Set the county to Davidson
 nbs_field_set('DEM165','Davidson County')
 
-# Submit
-nbs_investigation_submit()
+# Submit, log submission status
+df$submission[i]<-nbs_investigation_submit()
 
 # Retrieve new county
 new_county<-nbs_field_get('DEM165')
