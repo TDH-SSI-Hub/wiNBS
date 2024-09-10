@@ -515,7 +515,7 @@ edit_date<-function(id, val){
 #' @export
 edit_note<-function(id, val){
   edit_text_field(id,as.character(val), id_suffix = '', id_type = 'id')
-  Sys.sleep(.2)
+  #Sys.sleep(.2)
   oku<-unlist(remDr$findElement('id',id)$getElementAttribute('onchange'))
   button_ui<-substr(oku, str_locate(oku,"unhideBatchImg\\('")[2]+1,nchar(oku)-3)
   remDr$findElement('id',paste0('AddButtonToggle',button_ui))$findChildElement('tag name','input')$clickElement()
@@ -782,7 +782,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     message('Could not find question in metadata.')
   }else if(is.na(field_type)){
     message('No field type.')
-  }else if(input_type=='Multi-line Notes with User/Date Stamp'){
+  }else if(input_type=='MULTI-LINE NOTES WITH USER/DATE STAMP'){
     edit_note(id=field_id, val=as.character(value))
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
