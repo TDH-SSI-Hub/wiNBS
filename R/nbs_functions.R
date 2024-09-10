@@ -515,11 +515,11 @@ edit_date<-function(id, val){
 #' @export
 edit_note<-function(id, val){
   edit_text_field(id,as.character(val), id_suffix = '', id_type = 'id')
-  Sys.sleep(.5)
-  oku<-unlist(remDr$findElement('id',id)$getElementAttribute('onchange'))
-  button_ui<-substr(oku, str_locate(oku,"unhideBatchImg\\('")[2]+1,nchar(oku)-3)
-  remDr$findElement('id',paste0('AddButtonToggle',button_ui))$findChildElement('tag name','input')$clickElement()
-  
+  Sys.sleep(.2)
+  #oku<-unlist(remDr$findElement('id',id)$getElementAttribute('onchange'))
+  #button_ui<-substr(oku, str_locate(oku,"unhideBatchImg\\('")[2]+1,nchar(oku)-3)
+  #remDr$findElement('id',paste0('AddButtonToggle',button_ui))$findChildElement('tag name','input')$clickElement()
+  remDr$sendKeysToActiveElement(list(key='enter'))
 }
 
 #' Edit a numeric field
