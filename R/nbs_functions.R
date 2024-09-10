@@ -711,14 +711,62 @@ nbs_investigation_edit<-function(){
     }
 }
 
+#' Retrieve info from an note field
+#' 
+#' @param id String. NBS question_identifier for the field.
+#' @param page_source Page html. If NA, will pull current browser page (slower). For longer queries, use remDr$getPageSource() to pull the html once.
+#' @param row_start Numeric. First note row to be returned. Set to Inf to start at last row.
+#' @param row_end Numeric. Last note row to be returned. Set to Inf to end at last row.
+#' @param columns Numeric. Which columns (1-3) to include in output
+#' @param col_separator String. When specified column data will be combined into one string for each row, with the col_separator between fields. Set to NA to return a dataframe.
+#' @param row_separator String. When specified alongside a col_separator, data will be combined into one string, with the col_separator between fields and the row_separator between rows. If col_separator is not NA, and row_separator is NA, a vector will be returned.
+#' @return string, vector, or dataframe
+#' @export
+get_note<-function(id, page_source=NA, row_start=1, row_end=Inf , columns=1:3, row_separator = ' ^ ', col_separator= ' | '){
+  if(is.na(page_source)){
+    page_source <- remDr$getPageSource() %>% unlist() %>% rvest::read_html()
+  }
+  
+  if('list' %in% class(page_source)){
+    page_source<-unlist(page_source)
+  }
+  
+  if('character' %in% class(page_source)){
+    page_source<-rvest::read_html(page_source)
+  }
+  table_text<-page_source %>% 
+    html_elements(xpath=paste0("//*[starts-with(@id, 'table",id,"')]")) %>% 
+    html_text2() %>% 
+    matrix(ncol=3, byrow = T) %>% 
+    as.data.frame()
+  
+  colnames(table_text)<-c('Note','Date','By')
+  table_row<-nrow(table_text)-1
+  
+  if(table_row>0){
+    table_text<-as_tibble(table_text[1:table_row,columns])
+    if(row_end == Inf) row_end <- max(table_row,1)
+    if(row_start == Inf) row_start <- max(table_row,1)
+    if(!is.na(col_separator)){
+      table_text<-apply(table_text[row_start:row_end,], 1, paste0, collapse=col_separator)
+      if(!is.na(row_separator)){
+        table_text<-paste0(table_text, collapse=row_separator)
+      }
+    }
+  }
+  table_text
+}
+
 #' Retrieve field from an investigation page
 #' 
 #' @param id String. NBS question_identifier for the field.
 #' @param page_source Page html. If NA, will pull current browser page (slower). For longer queries, use remDr$getPageSource() to pull the html once.
+#' @param note T/F. Is the field a note field (with repeating note blocks)
+#' @param ... Additional arguments passed on to get_note() which determine what info is returned for notes. By default returns the text of the last note.
 #'
 #' @return string
 #' @export
-nbs_field_get<-function(id,page_source=NA){
+nbs_field_get<-function(id,page_source=NA, note = F, ...){
   if(is.na(page_source)){
     page_source <- remDr$getPageSource() %>% unlist() %>% rvest::read_html()
   }
@@ -731,8 +779,13 @@ nbs_field_get<-function(id,page_source=NA){
     page_source<-rvest::read_html(page_source)
   }
   
+  if(note){
+    get_note(id, page_source, Inf, Inf,1)
+  }else{
+    page_source %>% html_element(paste0('#',id)) %>% html_text2()
+  }
   
-  page_source %>% html_element(paste0('#',id)) %>% html_text2()
+  
 }
 
 #' Set the value of a field on the edit investigation page
