@@ -506,6 +506,21 @@ edit_date<-function(id, val){
   edit_text_field(id,as.character(TNTools::tn_clean_date(val, format = '%m/%d/%Y')), id_suffix = '', id_type = 'id')
 }
 
+#' Edit a note field
+#' 
+#' @param id String. HTML ID for date field.
+#' @param val String. Text to enter
+#'
+#' @return NULL
+#' @export
+edit_note<-function(id, val){
+  edit_text_field(id,as.character(val), id_suffix = '', id_type = 'id')
+  oku<-unlist(remDr$findElement('id',id)$getElementAttribute('onchange'))
+  button_ui<-substr(oku, str_locate(oku,"unhideBatchImg\\('")[2]+1,nchar(oku)-3)
+  remDr$findElement('id',paste0('AddButtonToggle',button_ui))$findChildElement('tag name','input')$clickElement()
+  
+}
+
 #' Edit a numeric field
 #' 
 #' @param id String. HTML ID for numeric field.
@@ -767,6 +782,8 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     message('Could not find question in metadata.')
   }else if(is.na(field_type)){
     message('No field type.')
+  }else if(input_type=='Multi-line Notes with User/Date Stamp'){
+    edit_note(id=field_id, val=as.character(value))
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
   }else if(input_type=='MULTI-SELECT (LIST BOX)'){
