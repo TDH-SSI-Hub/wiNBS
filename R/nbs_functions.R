@@ -508,7 +508,7 @@ edit_date<-function(id, val){
 
 #' Edit a note field
 #' 
-#' @param id String. HTML ID for date field.
+#' @param id String. HTML ID for note field.
 #' @param val String. Text to enter
 #'
 #' @return NULL

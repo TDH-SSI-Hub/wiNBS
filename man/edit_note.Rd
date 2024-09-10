@@ -7,7 +7,7 @@
 edit_note(id, val)
 }
 \arguments{
-\item{id}{String. HTML ID for date field.}
+\item{id}{String. HTML ID for note field.}
 
 \item{val}{String. Text to enter}
 }
