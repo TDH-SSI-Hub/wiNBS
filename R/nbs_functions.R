@@ -835,7 +835,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     message('Could not find question in metadata.')
   }else if(is.na(field_type)){
     message('No field type.')
-  }else if(input_type=='MULTI-LINE NOTES WITH USER/DATE STAMP'){
+  }else if(grepl('^MULTI-LINE',input_type)){
     edit_note(id=field_id, val=as.character(value))
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
