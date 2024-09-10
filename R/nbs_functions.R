@@ -753,6 +753,13 @@ get_note<-function(id, page_source=NA, row_start=1, row_end=Inf , columns=1:3, r
         table_text<-paste0(table_text, collapse=row_separator)
       }
     }
+  }else{
+    if(is.na(col_separator)){
+      return(table_text)
+    }else{
+      return('')
+    }
+    
   }
   table_text
 }
