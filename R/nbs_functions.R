@@ -1136,6 +1136,7 @@ nbs_report<-function(report
   tab_num<-ps %>%  html_elements(xpath='//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td') %>% 
     length()
   
+  if(length(basic)>0){
   for(b in 1:length(basic)){
     if(any(is.na(basic[[b]]))){
       remDr$findElement('id',names(basic[b]))$clickElement()
@@ -1172,13 +1173,16 @@ nbs_report<-function(report
     
     remDr$findElement('id',names(basic[b]))$sendKeysToElement(list("\uE009a\uE009",basic[[b]]))
   }
+  }
   
   if(tab_num>2){
   remDr$findElement('xpath','//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/table/tbody/tr/td[2]/a')$clickElement()
   
   if(any(is.na(columns))){
     remDr$findElement('id','id_AddAll')$clickElement()
-  }else{
+  }else if(length(columns==1)&any(columns=='')){
+    
+    }else{
     option_list<-remDr$findElement('id','id_AVAILABLE_COLUMNS_list')
     col_options<-option_list$getElementText()
     

@@ -190,12 +190,14 @@ use `'elementID'='some_text'`. To click an element, use
 `'elementID'=c('option1','option2','option3')`. To select a single value
 from a dropdown, you must either provide the value 3 times (the first 2
 cancel each other out), or provide an additional fake value (which will
-generate a warning message).
+generate a warning message). To keep the default basic filters, set
+`basic=list()`.
 
 To select columns, provide a vector to `columns`, where a numeric vector
 will select by location in the list, and a string vector will match on
-title. Leaving the `columns` parameter as `NA` will select all columns.
-Note that not all reports allow column selection.
+title. Leaving the `columns` parameter as `NA` will select all columns,
+and setting it to “” will select no columns (leaving the default
+selection in place). Note that not all reports allow column selection.
 
 The example below will select Covid-19 as the condition of interest,
 click the “Select All” checkbox for counties to include, and set the
@@ -204,18 +206,18 @@ click the “Select All” checkbox for counties to include, and set the
 ``` r
 # Selects all columns
 nbs_report('Custom Report for Disease Counts by County'
-           , basic=list('id_C_D01'=c('COVID-19','COVID-19','COVID-19')
-                    ,'id_county_select_all'=NA
-                    , 'id_T_T01a'=Sys.Date()-30
-                    , 'id_T_T01b'=Sys.Date())
+           , basic=list('id_C_D01'= c('COVID-19','COVID-19','COVID-19')
+                    , 'id_county_select_all'= NA
+                    , 'id_T_T01a'= Sys.Date()-30
+                    , 'id_T_T01b'= Sys.Date())
            )
 
 # Selects age, city, and ID columns
 nbs_report('Custom Report for Disease Counts by County'
-           , basic = list('id_C_D01'=c('COVID-19','COVID-19','COVID-19')
-                    ,'id_county_select_all'=NA
-                    , 'id_T_T01a'=Sys.Date()-30
-                    , 'id_T_T01b'=Sys.Date())
+           , basic = list('id_C_D01'= c('COVID-19','COVID-19','COVID-19')
+                    , 'id_county_select_all'= NA
+                    , 'id_T_T01a'= Sys.Date()-30
+                    , 'id_T_T01b'= Sys.Date())
            , columns = c('Age Reported', 'City', 'Investigation ID')
            )
 ```
