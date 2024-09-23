@@ -2,7 +2,7 @@
 % Please edit documentation in R/nbs_functions.R
 \name{nbs_report}
 \alias{nbs_report}
-\title{Go to and run and NBS report}
+\title{Go to and export an NBS report}
 \usage{
 nbs_report(
   report,
@@ -13,12 +13,15 @@ nbs_report(
 \arguments{
 \item{report}{String. The name of the report.}
 
-\item{basic}{Named character vector. Values to enter/select in the basic filtering page, named by their HTML ID.}
+\item{basic}{Named list. Values to enter/select in the basic filtering page, named by their HTML ID.
+To click an element, use 'elementID'=NA.
+To enter text, use 'elementID'='text_to_enter'.
+To select from a dropdown, use 'elementID'=c('option1','option2'). To select just one dropdown option, you will need to provide a vector of options with a length greater than 1, so provide an additional fake option (will generate a message), or list the same option 3 times (first 2 cancel out).}
 
 \item{columns}{NA/character or numeric vector. If NA, will export all columns. Otherwise, will export the columns named or specified via index.}
 }
 \description{
 This function will find an NBS report by name, then enter basic filters and column selections before exporting the report results.
-Will first attempt to load the home page if not already there, but this does not work from an actual report page currently.
+Will first attempt to load the home page if not already there.
 Advanced filtering not added yet, but possible.
 }

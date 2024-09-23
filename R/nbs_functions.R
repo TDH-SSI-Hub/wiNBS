@@ -1070,14 +1070,17 @@ nbs_patient_search<-function(id){
 }
 
 
-#' Go to and run and NBS report
+#' Go to and export an NBS report
 #' 
 #' This function will find an NBS report by name, then enter basic filters and column selections before exporting the report results.
-#' Will first attempt to load the home page if not already there, but this does not work from an actual report page currently.
+#' Will first attempt to load the home page if not already there.
 #' Advanced filtering not added yet, but possible.
 #' 
 #' @param report String. The name of the report.
-#' @param basic Named character vector. Values to enter/select in the basic filtering page, named by their HTML ID.
+#' @param basic Named list. Values to enter/select in the basic filtering page, named by their HTML ID. 
+#' To click an element, use 'elementID'=NA. 
+#' To enter text, use 'elementID'='text_to_enter'. 
+#' To select from a dropdown, use 'elementID'=c('option1','option2'). To select just one dropdown option, you will need to provide a vector of options with a length greater than 1, so provide an additional fake option (will generate a message), or list the same option 3 times (first 2 cancel out).
 #' @param columns NA/character or numeric vector. If NA, will export all columns. Otherwise, will export the columns named or specified via index.
 #'  
 #' @return NULL
@@ -1086,13 +1089,18 @@ nbs_report<-function(report
                      , basic=list('id_T_T01a'=Sys.Date()-30, 'id_T_T01b'=Sys.Date())
                      , columns=NA
 ){
-  if (remDr$getTitle() != "NBS Dashboard") {
-    nbs_home_page()
-  }
+
+    ct<-unlist(remDr$getCurrentUrl())
+    if(grepl('managereports',ct, ignore.case = T)){
+      
+    }else if(grepl('nbs/report/',ct, ignore.case = T)){
+      remDr$findElement('id','id_cancel_top_ToolbarButtonGraphic')$clickElement()
+    } else {
+      nbs_home_page()
+      remDr$navigate('https://nbsproduction.tn.gov/nbs/ManageReports.do')
+    }
+
   
-  
-  # Go to report page from home page
-  remDr$navigate('https://nbsproduction.tn.gov/nbs/ManageReports.do')
   
   # Find all dropdowns
   dropdown_boxes<-remDr$findElements('tag name','img')
@@ -1101,25 +1109,71 @@ nbs_report<-function(report
     if(grepl('plus',db$getElementAttribute('src'))) db$clickElement()
   }
   
-  # Find all descriptions and their links
-  descriptions<-remDr$findElements('class','hoverDescLink')
-  links<-remDr$findElements('link text','Run')
+  ps<-remDr$getPageSource() %>% unlist() %>% rvest::read_html()
   
-  # if a description matches the target report, click the link
-  for (d in 1:length(descriptions)){
-    if(unlist(descriptions[[d]]$getElementText())==report){
-      links[[d]]$clickElement()
-      break
-    }
+  tab_num<-ps %>%  html_elements(xpath='//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td') %>% 
+    length()
+  
+  
+  dtext<- ps %>%
+    rvest::html_elements('.hoverDescLink') %>% 
+    rvest::html_text() %>% 
+    tolower() %>% trimws()
+  
+  rfound<-which(tolower(report)==dtext)
+  
+  if(length(rfound)==0){
+    message('Report not found; check for typos')
+    return(NULL)
   }
   
+  if(length(rfound)>1) message('Multiple reports matched, choosing first')
+  
+  remDr$findElements('link text','Run')[[rfound[1]]]$clickElement()
+  
+  ps<-remDr$getPageSource() %>% unlist() %>% rvest::read_html()
+  
+  tab_num<-ps %>%  html_elements(xpath='//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td') %>% 
+    length()
+  
   for(b in 1:length(basic)){
+    if(any(is.na(basic[[b]]))){
+      remDr$findElement('id',names(basic[b]))$clickElement()
+      next
+    }
+    
+    if(length(basic[[b]])>1){
+      bb<-tolower(basic[[b]])
+      
+      
+      
+      dlist<-ps %>%
+        rvest::html_nodes(xpath=paste0('//*[@id="',names(basic[b]),'"]')) %>% 
+        rvest::html_nodes('option') 
+      dtext<-dlist %>% rvest::html_text() %>% tolower()
+      
+      for (sb in bb){
+        copt<-which(sb==dtext)
+        
+        if(length(copt)==0){
+          message(paste0("Can't find option ",sb))
+          next
+        }else{
+          remDr$findElement('xpath',paste0('//*[@id="',names(basic[b]),'"]/option[',copt[1],']'))$clickElement()
+        }
+        
+      }
+      next
+    }
+    
     if('Date' %in% class(basic[[b]])){
       basic[[b]]<-TNTools::tn_clean_date(basic[[b]],'%m%d%Y')
     }
-    remDr$findElement('id',names(basic[b]))$sendKeysToElement(list(basic[[b]]))
+    
+    remDr$findElement('id',names(basic[b]))$sendKeysToElement(list("\uE009a\uE009",basic[[b]]))
   }
   
+  if(tab_num>2){
   remDr$findElement('xpath','//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/table/tbody/tr/td[2]/a')$clickElement()
   
   if(any(is.na(columns))){
@@ -1144,6 +1198,7 @@ nbs_report<-function(report
     }
     
     remDr$findElement('id','id_Add')$clickElement()
+  }
   }
   # Hit export button
   remDr$findElement('id','id_export_top_ToolbarButtonGraphic')$clickElement()

@@ -122,11 +122,11 @@ option. Currently, printing only works with Chrome browsers.
 From the NBS home page, you can use `nbs_search()` to find patients,
 labs, investigations, etc.. By default, `nbs_search()` looks for
 investigations, but you can specify any value from the event ID type
-dropdown. Direct patient search is not supported at this time.
-`nbs_search()` will take you to the patient landing page. To go to an
-investigation directly, use `nbs_investigation_go_to()`. This function
-will go directly to an investigation from anywhere in NBS (using the
-search functionality if needed).
+dropdown. `nbs_search()` will take you to the patient landing page. To
+go to an investigation directly, use `nbs_investigation_go_to()`. This
+function will go directly to an investigation from anywhere in NBS
+(using the search functionality if needed). To search for a patient by
+patient ID, use `nbs_patient_search()`.
 
 ``` r
 # Go to patient with investigation CAS12345678
@@ -137,6 +137,8 @@ nbs_search('OBS12345678', ID_type = 'Lab ID')
 
 # Go to investigation CAS12345678
 nbs_investigation_go_to('CAS12345678')
+
+nbs_patient_search('12345678')
 ```
 
 ## Queues
@@ -173,6 +175,49 @@ nbs_queue_row_click()
 
 # Go back to the queue from inside a lab/case
 nbs_queue_return()
+```
+
+## Reports
+
+You can run a report using `nbs_report()`. This will go to the report
+page and enter basic filters and column selections before exporting the
+report (to the default location the browser is downloading to).
+
+To set the basic filters, use the `basic` parameter with a named list of
+elements to change and values to set them to. To enter text to a field,
+use `'elementID'='some_text'`. To click an element, use
+`'elementID'=NA`. To select dropdown options from an element, use
+`'elementID'=c('option1','option2','option3')`. To select a single value
+from a dropdown, you must either provide the value 3 times (the first 2
+cancel each other out), or provide an additional fake value (which will
+generate a warning message).
+
+To select columns, provide a vector to `columns`, where a numeric vector
+will select by location in the list, and a string vector will match on
+title. Leaving the `columns` parameter as `NA` will select all columns.
+Note that not all reports allow column selection.
+
+The example below will select Covid-19 as the condition of interest,
+click the “Select All” checkbox for counties to include, and set the
+“from” and “to” fields to include previous month’s data.
+
+``` r
+# Selects all columns
+nbs_report('Custom Report for Disease Counts by County'
+           , basic=list('id_C_D01'=c('COVID-19','COVID-19','COVID-19')
+                    ,'id_county_select_all'=NA
+                    , 'id_T_T01a'=Sys.Date()-30
+                    , 'id_T_T01b'=Sys.Date())
+           )
+
+# Selects age, city, and ID columns
+nbs_report('Custom Report for Disease Counts by County'
+           , basic = list('id_C_D01'=c('COVID-19','COVID-19','COVID-19')
+                    ,'id_county_select_all'=NA
+                    , 'id_T_T01a'=Sys.Date()-30
+                    , 'id_T_T01b'=Sys.Date())
+           , columns = c('Age Reported', 'City', 'Investigation ID')
+           )
 ```
 
 ## Labs
@@ -231,7 +276,4 @@ new_county<-nbs_field_get('DEM165')
 ## Future Work
 
 - More convenience functions
-- Add printing to Firefox
-- Add checks after submit
 - Increase functionality around labs/morbs/case reports.
-- Direct patient search
