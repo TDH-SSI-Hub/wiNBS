@@ -842,7 +842,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     message('Could not find question in metadata.')
   }else if(is.na(field_type)){
     message('No field type.')
-  }else if(grepl('^MULTI-LINE',input_type)){
+  }else if(grepl('^MULTI-LINE NOTES WITH',input_type)){
     edit_note(id=field_id, val=as.character(value))
   }else if(field_type=='TEXT'){
     edit_text_field(id=field_id, val=as.character(value), id_type = 'id', id_suffix = '')
@@ -1055,7 +1055,14 @@ nbs_quick_code_search<-function(id,value,id_type='Person', add=T){
   
 }
 
-
+#' Search for a patient by ID
+#' 
+#' This function searches for a patient from the home page.
+#' 
+#' @param id The patient ID
+#'  
+#' @return NULL
+#' @export
 nbs_patient_search<-function(id){
   remDr$findElement('id','DEM229')$sendKeysToElement(list(as.character(id)))
   remDr$executeScript('searchPatient();')
@@ -1063,4 +1070,83 @@ nbs_patient_search<-function(id){
 }
 
 
+#' Go to and run and NBS report
+#' 
+#' This function will find an NBS report by name, then enter basic filters and column selections before exporting the report results.
+#' Will first attempt to load the home page if not already there, but this does not work from an actual report page currently.
+#' Advanced filtering not added yet, but possible.
+#' 
+#' @param report String. The name of the report.
+#' @param basic Named character vector. Values to enter/select in the basic filtering page, named by their HTML ID.
+#' @param columns NA/character or numeric vector. If NA, will export all columns. Otherwise, will export the columns named or specified via index.
+#'  
+#' @return NULL
+#' @export
+nbs_report<-function(report
+                     , basic=list('id_T_T01a'=Sys.Date()-30, 'id_T_T01b'=Sys.Date())
+                     , columns=NA
+){
+  if (remDr$getTitle() != "NBS Dashboard") {
+    nbs_home_page()
+  }
+  
+  
+  # Go to report page from home page
+  remDr$navigate('https://nbsproduction.tn.gov/nbs/ManageReports.do')
+  
+  # Find all dropdowns
+  dropdown_boxes<-remDr$findElements('tag name','img')
+  # If they are closed, open them
+  for (db in dropdown_boxes){
+    if(grepl('plus',db$getElementAttribute('src'))) db$clickElement()
+  }
+  
+  # Find all descriptions and their links
+  descriptions<-remDr$findElements('class','hoverDescLink')
+  links<-remDr$findElements('link text','Run')
+  
+  # if a description matches the target report, click the link
+  for (d in 1:length(descriptions)){
+    if(unlist(descriptions[[d]]$getElementText())==report){
+      links[[d]]$clickElement()
+      break
+    }
+  }
+  
+  for(b in 1:length(basic)){
+    if('Date' %in% class(basic[[b]])){
+      basic[[b]]<-TNTools::tn_clean_date(basic[[b]],'%m%d%Y')
+    }
+    remDr$findElement('id',names(basic[b]))$sendKeysToElement(list(basic[[b]]))
+  }
+  
+  remDr$findElement('xpath','//*[@id="frm"]/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td/table[5]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/table/tbody/tr/td[2]/a')$clickElement()
+  
+  if(any(is.na(columns))){
+    remDr$findElement('id','id_AddAll')$clickElement()
+  }else{
+    option_list<-remDr$findElement('id','id_AVAILABLE_COLUMNS_list')
+    col_options<-option_list$getElementText()
+    
+    option_list_selections<-option_list$findChildElements('tag name','option')
+    
+    col_options<-unlist(stringr::str_split(col_options,'\n'))
+    
+    if('integer' %in% class(columns)){
+      col_selected<-col_options[columns]
+    }else{
+      col_selected<-columns
+    }
+    
+    for (cl in col_selected){
+      cindex<-(1:length(col_options))[cl==col_options]
+      option_list_selections[[cindex]]$clickElement()
+    }
+    
+    remDr$findElement('id','id_Add')$clickElement()
+  }
+  # Hit export button
+  remDr$findElement('id','id_export_top_ToolbarButtonGraphic')$clickElement()
+  
+}
 

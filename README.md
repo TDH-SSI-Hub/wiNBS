@@ -9,6 +9,28 @@ upon `RSelenium`. Refer to [the official
 documentation](https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html)
 for more guidance.
 
+### Chromedriver fix
+
+Automated downloads of new chromedrivers seems to be failing unless you
+install the `wdman` package from a patched repository using the code
+below.
+
+``` r
+devtools::install_github('ashbythorpe/wdman', ref='chromefix')
+```
+
+After downloading, you will need to edit the folder with your
+chromedrivers. My chromedrivers are stored here:
+`C:\Users\dcnumber\AppData\Local\binman\binman_chromedriver`. Find your
+equivalent folder. Inside, you will find a ‘win32’ and/or ‘win64’
+subfolder. Inside these are your chromedriver versions. In order to make
+sure future downloads run automatically, do the following:
+
+1.  Create a ‘win64’ folder if it does not exist.
+2.  Delete the ‘win32’ folder.
+
+## Workflow
+
 The functions in `wiNBS` create or utilize the global object `remDr`,
 which represents the browser. Most functions do not return values, but
 instead prompt `remDr` to perform certain actions which are commonly
@@ -65,7 +87,8 @@ in. After you run `nbs_password_set()` be sure to delete
 Once set, you may provide your username to
 `nbs_password_get('your_username')` to retrieve your NBS password, but
 this is not advised. Do not store your password in the global
-environment.
+environment. Once you set a password, you can update it by rerunning
+`nbs_password_set()` or by going to your credential manager in Windows.
 
 Once you have set your password, you can use `nbs_load('your_username')`
 to log in to NBS. This will navigate to NBS, log in with your username
