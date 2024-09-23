@@ -83,8 +83,9 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
   chrome_license_clear()
   
   if(!is.na(print_to)){
+    print_to<-gsub('/','\\\\',print_to)
+    if(!grepl('\\\\$',print_to)) print_to<-paste0(print_to,'\\')
     message(paste0('Downloads routed to ',print_to))
-    if(!grepl('\\\\$|/$',print_to)) print_to<-paste0(print_to,'/')
     eCaps <- list(chromeOptions = list(args = list('--kiosk-printing'),prefs = list("savefile.default_directory"=print_to,"download.default_directory" = print_to, "printing.print_preview_sticky_settings.appState"= jsonlite::toJSON(list(recentDestinations=list(id='Save as PDF',origin='local',account=''),selectedDestinationId='Save as PDF', version=2),auto_unbox=TRUE))))
   } else{
     eCaps<-list()
