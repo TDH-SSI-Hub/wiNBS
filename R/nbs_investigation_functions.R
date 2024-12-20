@@ -235,6 +235,7 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
     if(grepl('staging',unlist(remDr$getCurrentUrl()))) base_url<-gsub('production','staging',base_url)
     remDr$navigate(paste0(base_url,uid))
   }
+  remDr$executeScript('hideBackButtonMessage()')
   
 }
 

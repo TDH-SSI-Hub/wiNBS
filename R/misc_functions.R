@@ -315,3 +315,6 @@ nbs_id_convert<-function(local_id, output_type='default', odbc_name='NBS_Prod', 
 #' @import keyring
 NULL
 
+nbs_back_button_error_dismiss<-function(){
+  remDr$executeScript('hideBackButtonMessage()')
+}

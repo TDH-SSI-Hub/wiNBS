@@ -209,6 +209,7 @@ nbs_report<-function(report
     } else {
       nbs_home_page()
       remDr$navigate('https://nbsproduction.tn.gov/nbs/ManageReports.do')
+      remDr$executeScript('hideBackButtonMessage()')
     }
 
   
