@@ -98,7 +98,7 @@ nbs_pdf_print <- function(pdfname, folder = NA, legacy_print = F) {
       Sys.sleep(.2)
     }
 
-    page.name <- unlist(remDr$getTitle())
+    page.name <- gsub(':','_',unlist(remDr$getTitle()))
     if (page.name == "") page.name <- stringr::str_extract(remDr$getCurrentUrl(),"Load.*\\.do")
 
     old.name <- paste0(download_location, "\\", page.name, ".pdf")
