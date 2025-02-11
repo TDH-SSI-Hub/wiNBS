@@ -178,7 +178,38 @@ nbs_home_page<-function(check_legacy=F){
   remDr$findElements("class", pclass)[[1]]$clickElement()
 }
 
+#' Go to a user management page
+#'
+#' @param dc_num DC number for user
+#' @param type Do you want to 'view' or 'edit' the user?
+#'
+#' @return Nothing
+#' @export
+nbs_user_management <-function(dc_num, type='view'){
+  remDr$navigate(paste0('https://nbsproduction.tn.gov/nbs/loadUser.do?OperationType=',type,'&userID=',dc_num))
+  remDr$executeScript('hideBackButtonMessage()')
+  return()
+}
 
+#' Set a user as active or inactive
+#'
+#' @param status Desired user status. Active or Inactive.
+#'
+#' @return Nothing
+#' @export
+nbs_user_set_status<-function(status){
+  status<-toupper(status)
+  remDr$findElement('id',status)$clickElement()
+  if(status=='INACTIVE') remDr$acceptAlert()
+}
+
+#' Submit edits to a user
+#'
+#' @return Nothing
+#' @export
+nbs_user_submit <- function(){
+  remDr$findElement('id','Submit')$clickElement()
+}
 
 
 #' Go to and export an NBS report
@@ -320,4 +351,10 @@ nbs_report<-function(report
   remDr$findElement('id','id_export_top_ToolbarButtonGraphic')$clickElement()
   
 }
+
+
+
+
+
+
 

@@ -6,3 +6,5 @@ data_example.csv
 example_output.csv
 functionparams.csv
 output_explained.csv
+wiNBS.Rproj
+.gitignore
