@@ -275,6 +275,27 @@ df$submission[i]<-nbs_investigation_submit()
 new_county<-nbs_field_get('DEM165')
 ```
 
+## User Management
+
+**For admin use only.** You can use the `nbs_user_*` family of functions
+to perform basic user management navigation and edits. Go to a user
+profile by using `nbs_user_management('dc1234567','view')` or
+`nbs_user_management('dc1234567','edit')` depending on if you want to
+view or edit the info. On the edit page, you can use
+`nbs_user_set_status('Inactive')` or `nbs_user_set_status('Active')` to
+change the user status, then use `nbs_user_submit()` to save the
+changes.
+
+``` r
+# Inactivate a list of users
+users<-c('dc11111','dc22222','dc33333')
+for (u in users){
+nbs_user_management(u,'edit')
+nbs_user_set_status('Inactive')
+nbs_user_submit()
+}
+```
+
 ## Bulk updates
 
 Editing fields in investigations in bulk is a common task.
@@ -397,8 +418,9 @@ After the edits complete, the log file will look something like this
 | CAS44444444  | 1/4/2024       | Unknown | Laboratory Confirmed | Clinical             |                      | NA             | Unknown    | Unknown    |              | NA             |                                                                |         NA | 22 seconds    | FALSE     |
 
 The first 3 columns are the originals from the data. The rest of the
-columns are created by the script. These example results can be
-interpreted as follows:
+columns are created by the script. Each field from the algorithm is
+given 4 associated columns, then some other log columns are included at
+the end. These example results can be interpreted as follows:
 
 1.  CAS11111111’s edits worked perfectly
 2.  CAS22222222’s edits failed to submit because the case had a missing
