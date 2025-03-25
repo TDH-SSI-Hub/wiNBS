@@ -54,6 +54,7 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
   remDr$findElement(using = "name", value = "usr_password")$clearElement()
   remDr$findElement(using = "name", value = "usr_password")$sendKeysToElement(list(password))
   remDr$findElements("tag name", "button")[[2]]$clickElement()
+  Sys.sleep(1)
   if (remDr$getTitle() == "HSSI Welcome") {
     remDr$findElements("class", "btn")[[1]]$clickElement()
   }
