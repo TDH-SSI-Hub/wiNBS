@@ -48,16 +48,37 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
   if(is.na(password)){
     return(NA)  
   }
-  remDr$navigate(url)
-  remDr$findElement(using = "name", value = "usr_name")$clearElement()
-  remDr$findElement(using = "name", value = "usr_name")$sendKeysToElement(list(u))
-  remDr$findElement(using = "name", value = "usr_password")$clearElement()
-  remDr$findElement(using = "name", value = "usr_password")$sendKeysToElement(list(password))
-  remDr$findElements("tag name", "button")[[2]]$clickElement()
-  Sys.sleep(1)
-  if (remDr$getTitle() == "HSSI Welcome") {
-    remDr$findElements("class", "btn")[[1]]$clickElement()
+  
+  if(url=='http://cdcnbsdemo.com/nbs/login'){
+    user_id<-'UserName'
+    user_password<-'Password'
+    demosite<-T
+  }else{
+    user_id<-'usr_name'
+    user_password<-'usr_password'
+    demosite<-F
   }
-  Sys.sleep(.5)
-  remDr$findElements("link text", environment)[[1]]$clickElement()
+  
+  remDr$navigate(url)
+  
+
+  remDr$findElement(using = "name", value = user_id)$clearElement()
+  remDr$findElement(using = "name", value = user_id)$sendKeysToElement(list(u))
+  remDr$findElement(using = "name", value = user_password)$clearElement()
+  remDr$findElement(using = "name", value = user_password)$sendKeysToElement(list(password))
+  if(demosite){
+    remDr$findElement("id", "id_Submit_top_ToolbarButtonGraphic")$clickElement()
+  }else{
+  remDr$findElements("tag name", "button")[[2]]$clickElement()
+    Sys.sleep(1)
+    if (remDr$getTitle() == "HSSI Welcome") {
+      remDr$findElements("class", "btn")[[1]]$clickElement()
+    }
+    if(!is.na(environment)){
+      Sys.sleep(.5)
+      remDr$findElements("link text", environment)[[1]]$clickElement()
+    }
+  }
+  
+
 }

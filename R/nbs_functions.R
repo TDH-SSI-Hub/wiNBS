@@ -1,3 +1,14 @@
+#' Get the base NBS url for a page
+#' 
+#' Used to accommodate various deployments of NBS
+#'  
+#' @return String. Base url
+#' @export
+nbs_url<-function(){
+  remDr$getCurrentUrl() %>% 
+    unlist() %>% 
+    stringr::str_replace('/nbs/.*','/nbs/')
+}
 
 #' Search for a patient by ID
 #' 
@@ -37,10 +48,9 @@ nbs_search <- function(ID_value, ID_type = "Investigation ID") {
 #'
 #' @param element HTML element for file
 #' @param outputname Desired name for downloaded file without extension
-#' @param url Base url for NBS instance - e.g., 'https://nbsproduction.tn.gov/nbs/'
 #' @return T/F if file downloaded
 #' @export
-nbs_file_download <- function(element, outputname, url = "https://nbsproduction.tn.gov/nbs/") {
+nbs_file_download <- function(element, outputname) {
   old.exact.name <- tryCatch(unlist(element$getElementText()), error = function(e) {
     return(NA)
   })
@@ -50,7 +60,7 @@ nbs_file_download <- function(element, outputname, url = "https://nbsproduction.
     attachment.exists <- T
     old.url <- unlist(element$getElementAttribute("href"))
     attachment.uid <- substr(old.url, str_locate(old.url, "AttachmentUid=")[2] + 1, stringr::str_locate(old.url, "fileNmTxt")[1] - 2)
-    remDr$navigate(paste0(url, "InvDownloadFile.do?ContextAction=doDownload&nbsAttachmentUid=", attachment.uid, "&fileNmTxt=", new.name))
+    remDr$navigate(paste0(nbs_url(), "InvDownloadFile.do?ContextAction=doDownload&nbsAttachmentUid=", attachment.uid, "&fileNmTxt=", new.name))
   } else {
     (attachment.exists <- F)
   }
@@ -186,7 +196,7 @@ nbs_home_page<-function(check_legacy=F){
 #' @return Nothing
 #' @export
 nbs_user_management <-function(dc_num, type='view'){
-  remDr$navigate(paste0('https://nbsproduction.tn.gov/nbs/loadUser.do?OperationType=',type,'&userID=',dc_num))
+  remDr$navigate(paste0(nbs_url(),'loadUser.do?OperationType=',type,'&userID=',dc_num))
   remDr$executeScript('hideBackButtonMessage()')
   return()
 }
@@ -239,7 +249,7 @@ nbs_report<-function(report
       remDr$findElement('id','id_cancel_top_ToolbarButtonGraphic')$clickElement()
     } else {
       nbs_home_page()
-      remDr$navigate('https://nbsproduction.tn.gov/nbs/ManageReports.do')
+      remDr$navigate(paste0(nbs_url(),'ManageReports.do'))
       remDr$executeScript('hideBackButtonMessage()')
     }
 

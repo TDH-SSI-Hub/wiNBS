@@ -230,10 +230,7 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
     url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))
   }else{
-    remDr$getCurrentUrl()
-    base_url<-"https://nbsproduction.tn.gov/nbs/ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID="
-    if(grepl('staging',unlist(remDr$getCurrentUrl()))) base_url<-gsub('production','staging',base_url)
-    remDr$navigate(paste0(base_url,uid))
+    remDr$navigate(paste0(nbs_url(),"ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",uid))
   }
   remDr$executeScript('hideBackButtonMessage()')
   
@@ -366,6 +363,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
   
   field_type<-toupper(metadata$data_type[metadata_row])
   input_type<-toupper(metadata$type_cd_desc[metadata_row])
+  if(length(input_type)==0) input_type<-toupper(metadata$ui_display_type[metadata_row])
   field_id<-metadata$question_identifier[metadata_row]
   
   if(check_tab){

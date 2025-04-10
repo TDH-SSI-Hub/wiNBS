@@ -4,18 +4,12 @@
 \alias{nbs_file_download}
 \title{Download a file from NBS}
 \usage{
-nbs_file_download(
-  element,
-  outputname,
-  url = "https://nbsproduction.tn.gov/nbs/"
-)
+nbs_file_download(element, outputname)
 }
 \arguments{
 \item{element}{HTML element for file}
 
 \item{outputname}{Desired name for downloaded file without extension}
-
-\item{url}{Base url for NBS instance - e.g., 'https://nbsproduction.tn.gov/nbs/'}
 }
 \value{
 T/F if file downloaded
