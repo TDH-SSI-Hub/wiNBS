@@ -28,7 +28,8 @@ nbs_bulk_template<-function(outfile=NA){
 #' @param data String/data.frame. The name a csv or the data.frame itself. Must contain an investigation local ID column.
 #' @param algorithm String/data.frame. The name a csv or the data.frame itself which conforms to the format returned by nbs_bulk_template().
 #' @param metadata NA/String/data.frame. A string acceptable to nbs_page_metadata_get() or a metadata data.frame. If NA, the metadata will be pulled for each investigation upon page loading (slower, but allows for changes to multiple condition types).
-#' @param username String. The username to be used to log  into NBS initially and if an error is encountered.
+#' @param username String. The username to be used to log into NBS initially and if an error is encountered.
+#' @param login_url String. The url to be used to log into NBS initially and if an error is encountered.
 #' @param envirnoment String. The NBS environment to log into. Should be "NBS Production" or "NBS Staging" typically.
 #' @param cancel_open T/F. Should edits not be submitted if the case is open?
 #' @param id_col String/NA. The name of the column to use for the investigation local ID. Will attempt to autodetect if NA.
@@ -39,9 +40,9 @@ nbs_bulk_template<-function(outfile=NA){
 #'  
 #' @return data.frame
 #' @export
-nbs_bulk_updates<-function(data, algorithm=NA, metadata=NA, username=NA, environment='NBS Production', cancel_open=F, id_col=NA, uid_col=NA, log_file=NA, log_every=100, message_vars=c('status','mismatches','time')){
+nbs_bulk_updates<-function(data, algorithm=NA, metadata=NA, username=NA,login_url='https://hssi.tn.gov/auth/login', environment='NBS Production', cancel_open=F, id_col=NA, uid_col=NA, log_file=NA, log_every=100, message_vars=c('status','mismatches','time')){
   
-  nbs_load(username, environment)
+  nbs_load(username, environment, login_url)
   
   # Load algorithm
   if('logical' %in% class(algorithm)){
@@ -196,7 +197,7 @@ nbs_bulk_updates<-function(data, algorithm=NA, metadata=NA, username=NA, environ
     },error=function(e){
       message('Error')
       if(!is.na(username)){
-        nbs_load(username, environment)
+        nbs_load(username, environment, url=login_url)
       }else{
         message('Specify a username to skip over errors')
       }

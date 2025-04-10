@@ -9,6 +9,7 @@ nbs_bulk_updates(
   algorithm = NA,
   metadata = NA,
   username = NA,
+  login_url = "https://hssi.tn.gov/auth/login",
   environment = "NBS Production",
   cancel_open = F,
   id_col = NA,
@@ -25,7 +26,9 @@ nbs_bulk_updates(
 
 \item{metadata}{NA/String/data.frame. A string acceptable to nbs_page_metadata_get() or a metadata data.frame. If NA, the metadata will be pulled for each investigation upon page loading (slower, but allows for changes to multiple condition types).}
 
-\item{username}{String. The username to be used to log  into NBS initially and if an error is encountered.}
+\item{username}{String. The username to be used to log into NBS initially and if an error is encountered.}
+
+\item{login_url}{String. The url to be used to log into NBS initially and if an error is encountered.}
 
 \item{cancel_open}{T/F. Should edits not be submitted if the case is open?}
 

@@ -93,7 +93,8 @@ environment. Once you set a password, you can update it by rerunning
 Once you have set your password, you can use `nbs_load('your_username')`
 to log in to NBS. This will navigate to NBS, log in with your username
 and password, and select the production environment (can change using
-the `environment` parameter).
+the `environment` parameter). Non-TN jurisdictions will also need to
+specify their own login url using the `url` parameter.
 
 ``` r
 # Open a browser, Chrome is the default
@@ -235,12 +236,14 @@ are scheduled to run 3x a day.
 As mentioned previously, `nbs_investigation_go_to()` can be used to go
 directly to an investigation. Once in the investigation, you can use
 `nbs_page_metadata_get()` to import the metadata for the current
-investigation. This metadata can be used to find the IDs for
-`nbs_field_get()` and also passed as a parameter in order to speed up
-the function. `nbs_field_get()` will return the current value, if any,
-for a given field. This function only works from the ‘View
-Investigation’ page, not the ‘Edit Investigation’ page, although this
-functionality may be added later.
+investigation. The metadata built into the package is for our TN
+deployment. Other states will likely need to specify their own metadata
+by reading in a csv of their page metadata (for now). This metadata can
+be used to find the IDs for `nbs_field_get()` and also passed as a
+parameter in order to speed up the function. `nbs_field_get()` will
+return the current value, if any, for a given field. This function only
+works from the ‘View Investigation’ page, not the ‘Edit Investigation’
+page, although this functionality may be added later.
 
 To edit an investigation, you can use `nbs_investigation_edit()` to
 enter the edit page. `nbs_field_set()` can be used to set the value of a
@@ -333,13 +336,13 @@ you can use `nbs_bulk_template('algorithm.csv')` to create a blank
 template in the working directory. Below is an example of a filled out
 template:
 
-| Group     | Field               | Tab             | ID     | Overwrite | Value_type | Value                         |
-|:----------|:--------------------|:----------------|:-------|:----------|:-----------|:------------------------------|
-| Case Info | Confirmation Method | Case Info       | INV161 | FALSE     | String     | Laboratory Confirmed          |
-| Case Info | Case Status         | Case Info       | INV163 | FALSE     | String     | Confirmed                     |
-| Case Info | PID                 | Case Info       | INV179 | TRUE      | R Code     | data\$PID\[i\]                |
-| Closure   | Date Closed         | Case Management | NBS196 | TRUE      | R Code     | format(Sys.Date(),‘%m/%d/%Y’) |
-| Closure   | Closed by           | Case Management | NBS197 | TRUE      | Quick Code | nbs-bot                       |
+| Group     | Field               | Tab             | ID     | Overwrite | Value_type | Value                       |
+|:----------|:--------------------|:----------------|:-------|:----------|:-----------|:----------------------------|
+| Case Info | Confirmation Method | Case Info       | INV161 | FALSE     | String     | Laboratory Confirmed        |
+| Case Info | Case Status         | Case Info       | INV163 | FALSE     | String     | Confirmed                   |
+| Case Info | PID                 | Case Info       | INV179 | TRUE      | R Code     | data\$PID\[i\]              |
+| Closure   | Date Closed         | Case Management | NBS196 | TRUE      | R Code     | format(Sys.Date(),‘%m%d%Y’) |
+| Closure   | Closed by           | Case Management | NBS197 | TRUE      | Quick Code | nbs-bot                     |
 
 This algorithm specifies that for each of the 4 investigations, we will
 make 5 changes. In this example, “Confirmation Method” and “Case Status”
