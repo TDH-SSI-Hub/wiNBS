@@ -618,3 +618,84 @@ nbs_notification_create<- function(comment='Created by automated bot'){
   window_switch(close_old = T)
   Sys.sleep(.5)
 }
+
+
+#' Edit the race field in an investigation
+#'
+#' Check (and possibly uncheck) various race checkboxes from the investigation edit page.
+#' Does not check for the correct tab currently.
+#' 
+#' @param race String with race(s) to select. Must match race option exactly!
+#' You can specify multiple race options by separating them with commas (e.g.,"Black or African American, Other")
+#' @param uncheck_others T/F Should races not found in race parameter be unselected? Should usually be FALSE. 
+#' Note that if TRUE, typos in the race parameter will uncheck those races. If TRUE, a blank string ("") for race will uncheck all races.
+#' 
+#' @return None
+#' @export
+nbs_investigation_race<-function(race,uncheck_others=F){
+  race_options<-c('American Indian or Alaska Native'='pageClientVO.americanIndianAlskanRace'
+                  ,'Asian'='pageClientVO.asianRace'
+                  ,'Black or African American'='pageClientVO.africanAmericanRace'
+                  ,'Native Hawaiian or Other Pacific Islander'='pageClientVO.hawaiianRace'
+                  ,'White'='pageClientVO.whiteRace'
+                  ,'Other'='pageClientVO.otherRace'
+                  ,'Refused to answer'='pageClientVO.refusedToAnswer'
+                  ,'Not Asked'='pageClientVO.notAsked'
+                  ,'Unknown'='pageClientVO.unKnownRace'
+  )
+  
+  for (ro in names(race_options)) {
+    if(grepl(ro,sel_races, ignore.case = T)){
+      
+      if(is.null(unlist(remDr$findElement('name',race_options[ro])$getElementAttribute('checked')))){
+        remDr$findElement('name',race_options[ro])$clickElement()
+      }
+      
+    }else if (uncheck_others){
+      if(!is.null(unlist(remDr$findElement('name',race_options[ro])$getElementAttribute('checked')))){
+        remDr$findElement('name',race_options[ro])$clickElement()
+      }
+    }
+  }
+}
+
+
+
+
+#' Transfer an investigation
+#'
+#' Transfer an investigation to a different jurisdiction from the investigation view page.
+#' 
+#' @param jurisdiction String with new jurisdiction to switch to. Must match jurisdiction dropdown option exactly!
+#' 
+#' @return None
+#' @export
+nbs_investigation_transfer<-function(jurisdiction){
+  # Open transfer window, switch to it
+  remDr$executeScript('return transferPamOwnership();')
+  window_switch()
+  # Set jurisdiction
+  remDr$findElement('name','INV107_button')$clickElement()
+  Sys.sleep(.1)
+  edit_text_field('INV107',jurisdiction)
+  Sys.sleep(.1)
+  # Run adapted submit which doesn't close the window
+  remDr$executeScript('var opener = getDialogArgument();
+		var newJur = getElementByIdOrByName("INV107").value;
+		var exportFacility= getElementByIdOrByName("exportFacility").value;
+		var theDocumentType = getElementByIdOrByName("documentType").value;
+		var comment = getElementByIdOrByName("NTF137").value;
+		if(validateTransferInputFields()){
+			return false;
+		}else{
+			opener.pageTOwnership(newJur,exportFacility,comment,theDocumentType);
+			var invest = getElementByIdOrByNameNode("pageview", opener.document)
+			invest.style.display = "none";
+                      }')
+  # Switch windows and close old one
+  window_switch(close_old = T)
+  # Remove back button error message
+  remDr$executeScript('hideBackButtonMessage()')
+}
+
+

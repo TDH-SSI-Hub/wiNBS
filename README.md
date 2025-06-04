@@ -2,7 +2,7 @@
 
 ## Working in NBS (wiNBS)
 
-This package is facilitates the creation of RSelenium-based scripts to
+This package facilitates the creation of RSelenium-based scripts to
 control web browsers. It has a particular focus at this time on NBS, but
 could be extended to other surveillance systems. This package is built
 upon `RSelenium`. Refer to [the official
@@ -245,6 +245,9 @@ return the current value, if any, for a given field. This function only
 works from the ‘View Investigation’ page, not the ‘Edit Investigation’
 page, although this functionality may be added later.
 
+To transfer an investigation to a different jurisdiction, you can use
+`nbs_investigation_transfer()` from the investigation’s view page.
+
 To edit an investigation, you can use `nbs_investigation_edit()` to
 enter the edit page. `nbs_field_set()` can be used to set the value of a
 field from the investigation page. The page metadata can also be
@@ -276,6 +279,22 @@ df$submission[i]<-nbs_investigation_submit()
 
 # Retrieve new county
 new_county<-nbs_field_get('DEM165')
+```
+
+The race checkboxes in investigations are different from other fields,
+so you can use the specialized `nbs_investigation_race()` function to
+edit this field.
+
+``` r
+# Check the box for 'Black or African American'
+nbs_investigation_race('Black or African American')
+
+# Check the box for 'Black or African American' and 'Other'
+nbs_investigation_race('Black or African American, Other')
+
+# Check the box for 'Black or African American' and 'Other'
+# Also unchecks any other previously check box
+nbs_investigation_race('Black or African American, Other', uncheck_others=T)
 ```
 
 ## User Management
