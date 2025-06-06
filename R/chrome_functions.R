@@ -102,7 +102,7 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
     vtry<-vtry+1
     tryCatch({
       if(kill_java) system("taskkill /im java.exe /f", ignore.stderr=T,show.output.on.console = F)
-  rD <<-RSelenium::rsDriver(browser="chrome", port=port, verbose=F, chromever = as.character(cver[vtry]),extraCapabilities=eCaps)
+  rD <<-RSelenium::rsDriver(browser="chrome", port=port, verbose=F,phantomver = NULL, chromever = as.character(cver[vtry]),extraCapabilities=eCaps)
   remDr <<- rD[["client"]]
     }, message=function(e){
       rm('rD',pos=1)
@@ -195,7 +195,9 @@ firefox_open_browser<-function(kill_java=T, port=NA){
       if (kill_java) 
         system("taskkill /im java.exe /f", ignore.stderr = T, 
                show.output.on.console = F)
-      rD <<- RSelenium::rsDriver(browser = "firefox", port = port
+      rD <<- RSelenium::rsDriver(browser = "firefox"
+                                 , port = port
+                                 , phantomver = NULL
                                  , verbose = F
                                  , chromever = NULL
       )
