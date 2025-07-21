@@ -77,7 +77,7 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
     if(!is.na(environment)){
       Sys.sleep(.5)
       #remDr$findElements("link text", environment)[[1]]$clickElement()
-      remDr$navigate(paste0('https://',str_replace_all(str_to_lower(environment),' ',''),'.tn.gov:443/login/index.asp'))
+      remDr$navigate(paste0('https://',stringr::str_replace_all(stringr::str_to_lower(environment),' ',''),'.tn.gov:443/login/index.asp'))
     }
   }
   
