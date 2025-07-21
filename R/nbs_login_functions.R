@@ -69,16 +69,18 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
   if(demosite){
     remDr$findElement("id", "id_Submit_top_ToolbarButtonGraphic")$clickElement()
   }else{
-  remDr$findElements("tag name", "button")[[2]]$clickElement()
+  remDr$findElements("tag name", "button")[[1]]$clickElement()
     Sys.sleep(1)
-    if (remDr$getTitle() == "HSSI Welcome") {
+    if (remDr$getTitle() == "Welcome!") {
       remDr$findElements("class", "btn")[[1]]$clickElement()
     }
     if(!is.na(environment)){
       Sys.sleep(.5)
-      remDr$findElements("link text", environment)[[1]]$clickElement()
+      #remDr$findElements("link text", environment)[[1]]$clickElement()
+      remDr$navigate(paste0('https://',str_replace_all(str_to_lower(environment),' ',''),'.tn.gov:443/login/index.asp'))
     }
   }
   
 
 }
+

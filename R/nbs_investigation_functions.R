@@ -671,8 +671,9 @@ nbs_investigation_race<-function(race,uncheck_others=F){
 #' @return None
 #' @export
 nbs_investigation_transfer<-function(jurisdiction){
-  # Open transfer window, switch to it
+  # Open transfer window
   remDr$executeScript('return transferPamOwnership();')
+  # Switch to new window
   window_switch()
   # Set jurisdiction
   remDr$findElement('name','INV107_button')$clickElement()
