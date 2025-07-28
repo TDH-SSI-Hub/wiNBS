@@ -14,7 +14,7 @@ window_switch(windowId = NA, close_old = F, verbose = F)
 \item{verbose}{T/F. Should the new window title be printed?}
 }
 \value{
-Nothing
+T/F
 }
 \description{
 Switch to a new tab

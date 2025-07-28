@@ -149,18 +149,7 @@ nbs_pdf_print <- function(pdfname, folder = NA, legacy_print = F) {
   }
 }
 
-#' Mark an event as reviewed
-#'
-#' @return "Marked as Reviewed" or "Already marked"
-#' @export
-nbs_lab_mark_as_reviewed<-function(){
-  if('markReviewd' %in% html_attr(html_nodes(read_html(remDr$getPageSource()[[1]]),'input'),'name')){
-    remDr$findElement('name','markReviewd')$clickElement()
-    return('Marked as Reviewed')
-  }else{
-    return('Already marked')
-  }
-}
+
 
 
 #' Determine if the current page is a legacy page

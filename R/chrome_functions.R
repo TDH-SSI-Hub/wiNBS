@@ -147,23 +147,26 @@ chrome_window_switch <- function( windowId) {
 #' @param windowId Window ID for destination tab.
 #' @param close_old T/F. Should the old window be closed?
 #' @param verbose T/F. Should the new window title be printed?
-#' @return Nothing
+#' @return T/F
 #' @export
 window_switch<-function( windowId=NA, close_old=F, verbose=F) {
   if(is.na(windowId)){
     home.window <- remDr$getCurrentWindowHandle()[[1]]
     all.window <- remDr$getWindowHandles()
-    windowId <- all.window[!all.window %in% home.window][[1]]
+    windowId <- all.window[!all.window %in% home.window]
   }
   if(length(windowId)==1){
     if(close_old) remDr$closeWindow()
     qpath <- sprintf("%s/session/%s/window", remDr$serverURL, remDr$sessionInfo[["id"]])
-    remDr$queryRD(qpath, "POST", qdata = list(handle = windowId))
+    remDr$queryRD(qpath, "POST", qdata = list(handle = windowId[[1]]))
     if(verbose) print(unlist(remDr$getTitle()))
+    return(T)
   }else if(length(windowId)==0){
     message('No window to switch to.')
-  }else if(length(windowId)>10){
+    return(F)
+  }else if(length(windowId)>1){
     message('Too many windows open to auto detect windowId. Please specify windowId parameter.')
+    return(F)
   }
   
 }
