@@ -171,8 +171,11 @@ nbs_queue_row_click<-function(row=1, col=1){
     .[col] %>% html_children()
   cur_el_attr<-unlist(html_attrs(cur_element))
   if('checkbox' %in% cur_el_attr | '#' %in% cur_el_attr) {
-    remDr$findElement('xpath',gsub('table\\[4\\]','table[3]',xml_path(cur_element)[1]))$clickElement()
-  }else{
+    epath<-xml_path(cur_element)[1]
+    table_num<-stringr::str_extract(epath,'table\\[\\d+\\]')
+    table_num_1<-as.numeric(stringr::str_extract(table_num,'\\d+'))
+    nepath<-gsub(paste0('table\\[',table_num_1,'\\]'),paste0('table[',table_num_1-1,']'),epath)
+    remDr$findElement('xpath',nepath)$clickElement()  }else{
     message('Nothing to click')
   }
 }
