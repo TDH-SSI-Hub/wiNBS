@@ -4,10 +4,11 @@
 #'  
 #' @return String. Base url
 #' @export
-nbs_url<-function(){
-  remDr$getCurrentUrl() %>% 
+nbs_url_get<-function(){
+  nbs_url<-remDr$getCurrentUrl() %>% 
     unlist() %>% 
     stringr::str_replace('/nbs/.*','/nbs/')
+  return(nbs_url)
 }
 
 #' Search for a patient by ID
@@ -31,13 +32,22 @@ nbs_patient_search<-function(id){
 #'
 #' @param ID_value Value to search for
 #' @param ID_type Event ID type to select from dropdown
+#' @param verbose T/F. Should a message be generated upon unsuccessful search?
 #' @return Nothing
 #' @export
-nbs_search <- function(ID_value, ID_type = "Investigation ID") {
+
+nbs_search <- function(ID_value, ID_type = "Investigation ID", verbose=T) {
   remDr$findElements("name", "ESR100_textbox")[[1]]$sendKeysToElement(list(ID_type, key = "tab"))
   remDr$findElements("name", "patientSearchVO.actId")[[1]]$sendKeysToElement(list(ID_value))
   remDr$executeScript("searchPatient();")
+  
+  if(grepl('resulted in 0 ',remDr$findElement('xpath','//*[@id="bd"]/div[3]')$getElementText()[[1]])){
+    if(verbose) message('Search resulted in no matches')
+    return(F)
+  }
+  
   remDr$findElements("id", "searchResultsTable")[[1]]$findChildElements("tag name", "a")[[7]]$clickElement()
+  return(T)
 }
 
 
@@ -60,7 +70,7 @@ nbs_file_download <- function(element, outputname) {
     attachment.exists <- T
     old.url <- unlist(element$getElementAttribute("href"))
     attachment.uid <- substr(old.url, str_locate(old.url, "AttachmentUid=")[2] + 1, stringr::str_locate(old.url, "fileNmTxt")[1] - 2)
-    remDr$navigate(paste0(nbs_url(), "InvDownloadFile.do?ContextAction=doDownload&nbsAttachmentUid=", attachment.uid, "&fileNmTxt=", new.name))
+    remDr$navigate(paste0(nbs_url, "InvDownloadFile.do?ContextAction=doDownload&nbsAttachmentUid=", attachment.uid, "&fileNmTxt=", new.name))
   } else {
     (attachment.exists <- F)
   }
@@ -168,13 +178,20 @@ nbs_page_is_legacy <- function() {
 #' @return Nothing
 #' @export
 nbs_home_page<-function(check_legacy=F){
-  pclass<- "navLink"
-  if(check_legacy){
-    if(nbs_page_is_legacy()){
-      pclass<-'navBar'
-    }
-  }
-  remDr$findElements("class", pclass)[[1]]$clickElement()
+  #pclass<- "navLink"
+  #if(check_legacy){
+  #  if(nbs_page_is_legacy()){
+   #   pclass<-'navBar'
+  #  }
+  #}
+  
+  #top_bar<-remDr$findElements("class", "navLink")
+  #if(length(top_bar)==0){
+  #  top_bar<-remDr$findElements("class", 'navBar')
+  #}
+  #top_bar[[1]]$clickElement()
+  
+  remDr$navigate(paste0(nbs_url,'HomePage.do?method=loadHomePage'))
 }
 
 #' Go to a user management page
@@ -185,7 +202,7 @@ nbs_home_page<-function(check_legacy=F){
 #' @return Nothing
 #' @export
 nbs_user_management <-function(dc_num, type='view'){
-  remDr$navigate(paste0(nbs_url(),'loadUser.do?OperationType=',type,'&userID=',dc_num))
+  remDr$navigate(paste0(nbs_url,'loadUser.do?OperationType=',type,'&userID=',dc_num))
   remDr$executeScript('hideBackButtonMessage()')
   return()
 }
@@ -238,7 +255,7 @@ nbs_report<-function(report
       remDr$findElement('id','id_cancel_top_ToolbarButtonGraphic')$clickElement()
     } else {
       nbs_home_page()
-      remDr$navigate(paste0(nbs_url(),'ManageReports.do'))
+      remDr$navigate(paste0(nbs_url,'ManageReports.do'))
       remDr$executeScript('hideBackButtonMessage()')
     }
 
@@ -352,8 +369,109 @@ nbs_report<-function(report
 }
 
 
+#' Go to the page for an event or person
+#' 
+#' This function accepts a wide variety of NBS local IDs and determines the correct search function to use based on the ID pattern.
+#' 
+#' @param ID Local ID
+#' @param prefer_morbs T/F. Should morb reports be searched for before lab reports?
+#'
+#' @return T/F
+#' @export
+nbs_go_to<-function(ID, prefer_morbs=F){
+  if(grepl('^psn',ID, ignore.case=T)){
+    ID<-nbs_id_convert(ID)
+  }
+  
+  if(grepl('^CAS',ID, ignore.case = T)){
+    nbs_investigation_go_to(ID)
+  }else if (grepl('^OBS',ID, ignore.case = T)){
+    if(!prefer_morbs){
+    if(nbs_lab_go_to(ID, verbose=F)){
+      return(T)
+    }else{
+      nbs_morb_go_to(ID)
+    }
+    }else{
+      if(nbs_morb_go_to(ID, verbose=F)){
+        return(T)
+      }else{
+        nbs_lab_go_to(ID)
+      }
+    }
+  }else if(grepl('^DOC',ID, ignore.case = T)){
+    nbs_doc_go_to(ID)
+  }else{
+    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page(check_legacy = T)}
+    nbs_patient_search(ID)
+  }
+}
 
-
-
-
+#' Go to an event
+#' 
+#' @param search_type The type of event to search for. Can be Lab ID, Morbidity Report ID, Document ID, or Investigation ID.
+#' @param ID Event ID. Required if this function is called from outside the patient page.
+#' @param uid The event uid. Providing a uid may be slightly faster.
+#' @param patient_page Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.
+#' @param verbose T/F. Should some extra messages be printed?
+#'
+#' @return T/F
+go_to_event<-function(search_type, ID=NA,uid=NA,patient_page=F, verbose=T){
+  
+  if(search_type=='Lab ID'){
+    table_name<-'eventLabReport'
+    col<-8
+    link_col<-1
+    direct_url<-"ViewFile1.do?ContextAction=ObservationLabIDOnSummary&observationUID="
+  }else if(search_type=='Morbidity Report ID'){
+    table_name<-'eventMorbReport'
+    col<-7
+    link_col<-1
+    direct_url<-"ViewFile1.do?ContextAction=ObservationMorbIDOnEvents&observationUID="
+  }else if(search_type=='Document ID'){
+    table_name<-'eventCaseReports'
+    direct_url<-"ViewFile1.do?ContextAction=DocumentIDOnEvents&nbsDocumentUid="
+    col<-7
+    link_col<-1
+  }else if(search_type=='Investigation ID'){
+    table_name<-'eventSumaryInv'
+    direct_url<-"ViewFile1.do?ContextAction=DocumentIDOnEvents&nbsDocumentUid="
+    col<-9
+    link_col<-2
+  }
+  
+  ID<-as.character(ID)
+  uid<-as.character(uid)
+  if(sum(is.na(c(ID,uid)))==2){
+    message('Error: ID or uid must be supplied')
+    return(NA)
+  }
+  
+  if(patient_page){
+    
+  }else{
+    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page(check_legacy = T)}
+    if(nbs_search(ID, search_type, verbose=verbose)){
+      
+    }else{
+      return(F)
+    }
+  }
+  
+  if(is.na(uid)){
+    lab_list<-remDr$getPageSource() %>%
+      unlist() %>%
+      read_html() %>%
+      html_element(xpath=paste0('//*[@id="',table_name,'"]/tbody')) 
+    lab_table<-html_table(lab_list) 
+    lab_index<-str_which(unlist(lab_table[,col]),ID)
+    
+    url<-remDr$findElement('xpath',paste0('//*[@id="',table_name,'"]/tbody/tr[',lab_index,']/td[',link_col,']/a'))$getElementAttribute('href')
+    remDr$navigate(unlist(url))
+  }else{
+    remDr$navigate(paste0(nbs_url,direct_url,uid))
+  }
+  remDr$executeScript('hideBackButtonMessage()')
+  return(T)
+}
 

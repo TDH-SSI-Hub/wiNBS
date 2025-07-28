@@ -124,10 +124,11 @@ From the NBS home page, you can use `nbs_search()` to find patients,
 labs, investigations, etc.. By default, `nbs_search()` looks for
 investigations, but you can specify any value from the event ID type
 dropdown. `nbs_search()` will take you to the patient landing page. To
-go to an investigation directly, use `nbs_investigation_go_to()`. This
-function will go directly to an investigation from anywhere in NBS
-(using the search functionality if needed). To search for a patient by
-patient ID, use `nbs_patient_search()`.
+go to an event directly, use `nbs_go_to()`. This functions detect which
+type of ID is being searched (lab, morb, investigation, case report,
+person) and will go directly there from anywhere in NBS (using the
+search functionality if needed). To search for a patient by patient ID,
+use `nbs_patient_search()`.
 
 ``` r
 # Go to patient with investigation CAS12345678
@@ -137,8 +138,9 @@ nbs_search('CAS12345678')
 nbs_search('OBS12345678', ID_type = 'Lab ID')
 
 # Go to investigation CAS12345678
-nbs_investigation_go_to('CAS12345678')
+nbs_go_to('CAS12345678')
 
+# Go to patient 12345678
 nbs_patient_search('12345678')
 ```
 
@@ -223,18 +225,22 @@ nbs_report('Custom Report for Disease Counts by County'
            )
 ```
 
-## Labs
+## Labs, Morbs, and Case Reports
 
-When inside a lab, you can use `nbs_lab_mark_as_reviewed()` to mark the
-lab as reviewed, if possible. In the future, we can also add a function
-which logs labs to be marked as reviewed in the Sandbox MAR table. This
-would allow for bulk marking as reviewed via backend SQL scripts that
-are scheduled to run 3x a day.
+`nbs_lab_go_to()`, `nbs_morb_go_to()`, and `nbs_doc_go_to()`can be used
+to go to a lab/morb/case report from anywhere in NBS. When inside a
+document, you can use `nbs_lab_mark_as_reviewed()` to mark the lab as
+reviewed, if possible. For some program areas, a processing decision is
+required; this can be provided as a string if needed
+(e.g. `nbs_lab_mark_as_reviewed('Administrative Closure')`). In the
+future, we can also add a function which logs labs to be marked as
+reviewed in the Sandbox MAR table. This would allow for bulk marking as
+reviewed via backend SQL scripts that are scheduled to run 3x a day.
 
 ## Investigations
 
-As mentioned previously, `nbs_investigation_go_to()` can be used to go
-directly to an investigation. Once in the investigation, you can use
+`nbs_investigation_go_to()` can be used to go directly to an
+investigation. Once in the investigation, you can use
 `nbs_page_metadata_get()` to import the metadata for the current
 investigation. The metadata built into the package is for our TN
 deployment. Other states will likely need to specify their own metadata

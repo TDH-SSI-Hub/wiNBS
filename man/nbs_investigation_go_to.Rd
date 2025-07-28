@@ -2,20 +2,22 @@
 % Please edit documentation in R/nbs_investigation_functions.R
 \name{nbs_investigation_go_to}
 \alias{nbs_investigation_go_to}
-\title{Go to an investigation from a patient page}
+\title{Go to an invetigation from anywhere}
 \usage{
-nbs_investigation_go_to(ID = NA, uid = NA, patient_page = F)
+nbs_investigation_go_to(ID = NA, uid = NA, patient_page = F, verbose = T)
 }
 \arguments{
-\item{ID}{A case ID. Required if this function is called from outside the patient page.}
+\item{ID}{An investigation ID. Required if this function is called from outside the patient page.}
 
-\item{uid}{The case uid. Providing a uid may be slightly faster.}
+\item{uid}{The investigation uid. Providing a uid may be slightly faster.}
 
 \item{patient_page}{Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.}
+
+\item{verbose}{T/F. Should some extra messages be printed?}
 }
 \value{
-Nothing
+T/F
 }
 \description{
-Go to an investigation from a patient page
+Go to an invetigation from anywhere
 }

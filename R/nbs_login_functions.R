@@ -81,6 +81,7 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
     }
   }
   
+  nbs_url<<-nbs_url_get()
 
 }
 

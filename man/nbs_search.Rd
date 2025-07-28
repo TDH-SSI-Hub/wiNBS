@@ -4,12 +4,14 @@
 \alias{nbs_search}
 \title{Search NBS for a given ID}
 \usage{
-nbs_search(ID_value, ID_type = "Investigation ID")
+nbs_search(ID_value, ID_type = "Investigation ID", verbose = T)
 }
 \arguments{
 \item{ID_value}{Value to search for}
 
 \item{ID_type}{Event ID type to select from dropdown}
+
+\item{verbose}{T/F. Should a message be generated upon unsuccessful search?}
 }
 \value{
 Nothing

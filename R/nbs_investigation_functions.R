@@ -195,6 +195,21 @@ nbs_investigation_submit<-function(check_submission=T){
   }
 }
 
+#' Go to an invetigation from anywhere
+#' 
+#' @param ID An investigation ID. Required if this function is called from outside the patient page.
+#' @param uid The investigation uid. Providing a uid may be slightly faster.
+#' @param patient_page Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.
+#' @param verbose T/F. Should some extra messages be printed?
+#'
+#' @return T/F
+#' @export
+nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F, verbose=T){
+  
+  go_to_event('Investigation ID' , ID, uid, patient_page, verbose)
+  
+}
+
 #' Go to an investigation from a patient page
 #' 
 #' @param ID A case ID. Required if this function is called from outside the patient page.
@@ -203,7 +218,7 @@ nbs_investigation_submit<-function(check_submission=T){
 #'
 #' @return Nothing
 #' @export
-nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
+nbs_investigation_go_to_deprecated<-function(ID=NA,uid=NA,patient_page=F){
   
   ID<-as.character(ID)
   uid<-as.character(uid)
@@ -215,7 +230,7 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
   if(patient_page){
     
   }else{
-    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page()}
+    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page(check_legacy = T)}
     nbs_search(ID)
   }
   
@@ -230,7 +245,7 @@ nbs_investigation_go_to<-function(ID=NA,uid=NA,patient_page=F){
     url<-remDr$findElement('xpath',paste0('//*[@id="eventSumaryInv"]/tbody/tr[',case_index,']/td[2]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))
   }else{
-    remDr$navigate(paste0(nbs_url(),"ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",uid))
+    remDr$navigate(paste0(nbs_url,"ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID=",uid))
   }
   remDr$executeScript('hideBackButtonMessage()')
   

@@ -56,10 +56,11 @@ nbs_lab_mark_as_reviewed<-function(processing_decision=NA){
 #' @param ID A lab ID. Required if this function is called from outside the patient page.
 #' @param uid The lab uid. Providing a uid may be slightly faster.
 #' @param patient_page Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.
+#' @param verbose T/F. Should some extra messages be printed?
 #'
 #' @return Nothing
 #' @export
-nbs_lab_go_to<-function(ID=NA,uid=NA,patient_page=F){
+nbs_lab_go_to_deprecated<-function(ID=NA,uid=NA,patient_page=F, verbose=T){
   
   ID<-as.character(ID)
   uid<-as.character(uid)
@@ -71,8 +72,12 @@ nbs_lab_go_to<-function(ID=NA,uid=NA,patient_page=F){
   if(patient_page){
     
   }else{
-    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page()}
-    nbs_search(ID, 'Lab ID')
+    if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page(check_legacy = T)}
+    if(nbs_search(ID, 'Lab ID', verbose=verbose)){
+      
+    }else{
+      return(F)
+    }
   }
 
   
@@ -88,9 +93,27 @@ nbs_lab_go_to<-function(ID=NA,uid=NA,patient_page=F){
     url<-remDr$findElement('xpath',paste0('//*[@id="eventLabReport"]/tbody/tr[',lab_index,']/td[1]/a'))$getElementAttribute('href')
     remDr$navigate(unlist(url))
   }else{
-    remDr$navigate(paste0(nbs_url(),"ViewFile1.do?ContextAction=ObservationLabIDOnSummary&observationUID=",uid))
+    remDr$navigate(paste0(nbs_url,"ViewFile1.do?ContextAction=ObservationLabIDOnSummary&observationUID=",uid))
   }
   remDr$executeScript('hideBackButtonMessage()')
+  return(T)
+}
+
+
+
+
+#' Go to a lab from anywhere
+#' 
+#' @param ID A lab ID. Required if this function is called from outside the patient page.
+#' @param uid The lab uid. Providing a uid may be slightly faster.
+#' @param patient_page Boolean. Is the function called from a patient page? By default, if an ID is supplied, the home page search is used. Setting patient_page=T speeds up code where the function is called from the patient page.
+#' @param verbose T/F. Should some extra messages be printed?
+#'
+#' @return Nothing
+#' @export
+nbs_lab_go_to<-function(ID=NA,uid=NA,patient_page=F, verbose=T){
+  
+  go_to_event('Lab ID' , ID, uid, patient_page, verbose)
   
 }
 
