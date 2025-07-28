@@ -5,49 +5,33 @@
 #' @return "Marked as Reviewed" or "Already marked"
 #' @export
 nbs_lab_mark_as_reviewed<-function(processing_decision=NA){
-  if('markReviewd' %in% html_attr(html_nodes(read_html(remDr$getPageSource()[[1]]),'input'),'name')){
-    remDr$findElement('name','markReviewd')$clickElement()
-    if(!is.na(processing_decision)){
-      if(window_switch()){
-      Sys.sleep(.1)
-      edit_text_field('reviewReason_textbox',processing_decision, id_suffix = '')
-      Sys.sleep(.1)
-      remDr$executeScript('	var opener = getDialogArgument();
-      var reason = null;
-      if(getElementByIdOrByName("reviewReason")!=null)
-    	  reason =  getElementByIdOrByName("reviewReason").value;
-      if(getElementByIdOrByNameNode("markAsReviewReason", opener.document)!=null && reason!=null)
-    	  getElementByIdOrByNameNode("markAsReviewReason", opener.document).value=reason;
-      var markAsReviewButtonHref="";
-      if(getElementByIdOrByNameNode("markAsReviewButtonHref", opener.document)!=null){
-        markAsReviewButtonHref = getElementByIdOrByNameNode("markAsReviewButtonHref", opener.document).value;
+    
+    buttons<-html_attr(html_nodes(read_html(remDr$getPageSource()[[1]]), 
+                                  "input"), "name")
+    if ("markReviewd" %in% buttons | "Mark as Reviewed" %in% buttons) {
+      bname<-ifelse("markReviewd" %in% buttons,'markReviewd',"Mark as Reviewed")
+      remDr$findElement("name", bname)$clickElement()
+      if (!is.na(processing_decision)) {
+        Sys.sleep(.2)
+        if (window_switch()) {
+          Sys.sleep(0.1)
+          edit_text_field("reviewReason_textbox", processing_decision, 
+                          id_suffix = "")
+          Sys.sleep(0.1)
+          remDr$executeScript("\tvar opener = getDialogArgument();\n      var reason = null;\n      if(getElementByIdOrByName(\"reviewReason\")!=null)\n    \t  reason =  getElementByIdOrByName(\"reviewReason\").value;\n      if(getElementByIdOrByNameNode(\"markAsReviewReason\", opener.document)!=null && reason!=null)\n    \t  getElementByIdOrByNameNode(\"markAsReviewReason\", opener.document).value=reason;\n      var markAsReviewButtonHref=\"\";\n      if(getElementByIdOrByNameNode(\"markAsReviewButtonHref\", opener.document)!=null){\n        markAsReviewButtonHref = getElementByIdOrByNameNode(\"markAsReviewButtonHref\", opener.document).value;\n      }\n      if(checkRequired()){\n        return false;\n      }\n      if(markAsReviewButtonHref!=\"\"){\n        opener.getPage(markAsReviewButtonHref+\"&markAsReviewReason=\"+reason);\n      }\n       else{\n    \t   opener.markAsReviewed(reason);\n      }\n      var invest = getElementByIdOrByNameNode(\"blockparent\", opener.document);\n      if(invest==null || invest==\"undefined\")\n    \t  invest = getElementByIdOrByNameNode(\"pageview\", opener.document);\n      invest.style.display = \"none\";\n      window.returnValue =\"true\";\n    ")
+          Sys.sleep(0.1)
+          window_switch(close_old = T)
+        }
+        else {
+          warning("Unused processing decision")
+        }
       }
-      if(checkRequired()){
-        return false;
-      }
-      if(markAsReviewButtonHref!=""){
-        opener.getPage(markAsReviewButtonHref+"&markAsReviewReason="+reason);
-      }
-       else{
-    	   opener.markAsReviewed(reason);
-      }
-      var invest = getElementByIdOrByNameNode("blockparent", opener.document);
-      if(invest==null || invest=="undefined")
-    	  invest = getElementByIdOrByNameNode("pageview", opener.document);
-      invest.style.display = "none";
-      window.returnValue ="true";
-    ')
-      Sys.sleep(.1)
-      window_switch(close_old = T)
-      }else{
-        warning('Unused processing decision')
-      }
+      return("Marked as Reviewed")
     }
-    return('Marked as Reviewed')
-  }else{
-    return('Already marked')
+    else {
+      return("Already marked")
+    }
   }
-}
 
 
 

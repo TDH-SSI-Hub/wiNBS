@@ -124,11 +124,14 @@ From the NBS home page, you can use `nbs_search()` to find patients,
 labs, investigations, etc.. By default, `nbs_search()` looks for
 investigations, but you can specify any value from the event ID type
 dropdown. `nbs_search()` will take you to the patient landing page. To
-go to an event directly, use `nbs_go_to()`. This functions detect which
+go to an event directly, use `nbs_go_to()`. This function detects which
 type of ID is being searched (lab, morb, investigation, case report,
 person) and will go directly there from anywhere in NBS (using the
 search functionality if needed). To search for a patient by patient ID,
-use `nbs_patient_search()`.
+use `nbs_patient_search()`. Specific functions for going to
+labs/morbs/case reports exist in addition to the general use
+`nbs_go_to()`(see sections below). These specific functions have a few
+extra options and may sometimes work faster.
 
 ``` r
 # Go to patient with investigation CAS12345678
@@ -229,13 +232,26 @@ nbs_report('Custom Report for Disease Counts by County'
 
 `nbs_lab_go_to()`, `nbs_morb_go_to()`, and `nbs_doc_go_to()`can be used
 to go to a lab/morb/case report from anywhere in NBS. When inside a
-document, you can use `nbs_lab_mark_as_reviewed()` to mark the lab as
+document, you can use `nbs_lab_mark_as_reviewed()` to mark it as
 reviewed, if possible. For some program areas, a processing decision is
 required; this can be provided as a string if needed
 (e.g. `nbs_lab_mark_as_reviewed('Administrative Closure')`). In the
 future, we can also add a function which logs labs to be marked as
 reviewed in the Sandbox MAR table. This would allow for bulk marking as
 reviewed via backend SQL scripts that are scheduled to run 3x a day.
+Note that `nbs_lab_mark_as_reviewed()` should work on morbidity reports
+and case reports in addition to labs.
+
+``` r
+# Go to lab with lab-specific function
+nbs_lab_go_to('OBS12345678')
+
+# Go to case report with generic search function
+nbs_go_to('DOC12345678')
+
+# Mark lab as reviewed
+nbs_lab_mark_as_reviewed()
+```
 
 ## Investigations
 
