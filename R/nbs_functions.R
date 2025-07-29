@@ -435,7 +435,7 @@ go_to_event<-function(search_type, ID=NA,uid=NA,patient_page=F, verbose=T){
     link_col<-1
   }else if(search_type=='Investigation ID'){
     table_name<-'eventSumaryInv'
-    direct_url<-"ViewFile1.do?ContextAction=DocumentIDOnEvents&nbsDocumentUid="
+    direct_url<-"ViewFile1.do?ContextAction=InvestigationIDOnEvents&publicHealthCaseUID="
     col<-9
     link_col<-2
   }
