@@ -96,7 +96,11 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
   
   #cver<-as.numeric_version(binman::list_versions("chromedriver")[[1]])
   #cver<-cver[order(cver, decreasing = T)]
+  if(is.na(chrome_ver)){
   cver<-chrome_driver_versions()
+  }else{
+    cver<- chrome_ver
+  }
   vtry<-0
   while(!exists('rD')){
     vtry<-vtry+1
