@@ -475,3 +475,15 @@ go_to_event<-function(search_type, ID=NA,uid=NA,patient_page=F, verbose=T){
   return(T)
 }
 
+#' Select a tab from an investigation, lab, or patient page
+#' 
+#' This function can be used to select a new (or the same) tab in patient pages and NBS labs and investigations that are pagebuilder pages (i.e., not legacy).
+#' Use the number of the tab you wish to select. You can call this function on the view or edit page.
+#' 
+#' @param tab Number for the tab you wish to click. 1 is farthest left.
+#'
+#' @return Nothing
+#' @export
+nbs_tab_select<-function(tab){
+  remDr$findElement('id',paste0('tabs0head',tab-1))$clickElement()
+}

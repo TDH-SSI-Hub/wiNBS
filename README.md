@@ -9,7 +9,9 @@ upon `RSelenium`. Refer to [the official
 documentation](https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html)
 for more guidance.
 
-### Chromedriver fix
+### Setup Issues
+
+#### Chromedriver
 
 Automated downloads of new chromedrivers seems to be failing unless you
 install the `wdman` package from a patched repository using the code
@@ -28,6 +30,14 @@ sure future downloads run automatically, do the following:
 
 1.  Create a ‘win64’ folder if it does not exist.
 2.  Delete the ‘win32’ folder.
+
+#### WMIC
+
+The state is phasing out `wmic` since it is EOL and may be discontinued
+at any point. For now, users without `wmic` will need to add the
+parameter `wmic=F` to their `browser_open()` calls. After some testing,
+`wmic=F` will become the default. Users with `wmic` should be able to
+use both methods to open browsers.
 
 ## Workflow
 
@@ -117,6 +127,10 @@ page. `nbs_page_is_legacy()` Should return T/F depending on if the page
 is legacy or not. Some functions in this package do not accommodate
 legacy pages. `nbs_pdf_print()` should work from most pages with a print
 option. Currently, printing only works with Chrome browsers.
+
+On any non-legacy page, you can use `nbs_tab_select()` to click into a
+different tab. You need to provide this function with the tab index, not
+the text on the tab.
 
 ## Searching
 

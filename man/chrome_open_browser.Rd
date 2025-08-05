@@ -8,7 +8,8 @@ chrome_open_browser(
   kill_java = T,
   port = NA,
   chrome_ver = NA,
-  print_to = getwd()
+  print_to = getwd(),
+  wmic = T
 )
 }
 \arguments{

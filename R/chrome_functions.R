@@ -38,15 +38,22 @@ chrome_version<-function(chrome_loc="C:\\Program Files (x86)\\Google\\Chrome\\Ap
 #' @param limit How many versions should be returned?
 #' @return The closest compatible chromedriver versions
 #' @export
-chrome_driver_versions<-function(limit=5){
+chrome_driver_versions<-function(limit=5, wmic=F){
   version_section<-function(v,s){
     as.numeric(sapply(str_split(v,'\\.'), function(x) x[[s]]))
   }
-  path <- utils::readRegistry("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe\\")
-  chrome_loc<-path[["(Default)"]]
-  chrome_loc<-gsub('\\\\','\\\\\\\\',chrome_loc)
-  l1<-system2(command = "wmic", args = paste0('datafile where name="',chrome_loc,'" get Version /value'), stdout = TRUE, stderr = TRUE)
-  l2<-stringr::str_extract(l1,pattern = "(?<=Version=)(\\d+\\.){3}\\d+$")
+  
+  if(wmic){
+    path <- utils::readRegistry("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe\\")
+    chrome_loc<-path[["(Default)"]]
+    chrome_loc<-gsub('\\\\','\\\\\\\\',chrome_loc)
+    l1<-system2(command = "wmic", args = paste0('datafile where name="',chrome_loc,'" get Version /value'), stdout = TRUE, stderr = TRUE)
+    l2<-stringr::str_extract(l1,pattern = "(?<=Version=)(\\d+\\.){3}\\d+$")
+  }else{
+    l1<-list.dirs('C:\\Program Files\\Google\\Chrome\\Application', recursive = F, full.names = F)
+    l2<-stringr::str_extract(l2,pattern = "(\\d+\\.){3}\\d+$")
+  }
+
   ref<-magrittr::extract(l2,!is.na(l2))
   options<-binman::list_versions("chromedriver")[['win64']]
   
@@ -73,7 +80,7 @@ chrome_driver_versions<-function(limit=5){
 #' @param print_to Folder location for downloads (only needed when printing pdfs or downloading files).
 #' @return Chrome browser object
 #' @export
-chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getwd()){
+chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getwd(), wmic=T){
   
   # Download chromedrivers
   temp<-wdman::chrome(verbose = F)
@@ -97,7 +104,7 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
   #cver<-as.numeric_version(binman::list_versions("chromedriver")[[1]])
   #cver<-cver[order(cver, decreasing = T)]
   if(is.na(chrome_ver)){
-  cver<-chrome_driver_versions()
+  cver<-chrome_driver_versions(wmic=wmic)
   }else{
     cver<- chrome_ver
   }

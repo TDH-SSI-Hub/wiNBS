@@ -4,7 +4,7 @@
 \alias{chrome_driver_versions}
 \title{Find best Chrome Driver for use}
 \usage{
-chrome_driver_versions(limit = 5)
+chrome_driver_versions(limit = 5, wmic = F)
 }
 \arguments{
 \item{limit}{How many versions should be returned?}
