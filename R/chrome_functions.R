@@ -51,7 +51,7 @@ chrome_driver_versions<-function(limit=5, wmic=F){
     l2<-stringr::str_extract(l1,pattern = "(?<=Version=)(\\d+\\.){3}\\d+$")
   }else{
     l1<-list.dirs('C:\\Program Files\\Google\\Chrome\\Application', recursive = F, full.names = F)
-    l2<-stringr::str_extract(l2,pattern = "(\\d+\\.){3}\\d+$")
+    l2<-stringr::str_extract(l1,pattern = "(\\d+\\.){3}\\d+$")
   }
 
   ref<-magrittr::extract(l2,!is.na(l2))
