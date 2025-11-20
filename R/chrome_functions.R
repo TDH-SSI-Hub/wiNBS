@@ -136,6 +136,7 @@ chrome_open_browser<-function(kill_java=T, port=NA, chrome_ver=NA, print_to=getw
 #' @return Nothing
 #' @export
 chrome_close_browser<-function(kill_java=T){
+  check_in('Closed Browser','',-1)
   remDr$close()
   rD$server$stop()
   if(kill_java)  system("taskkill /im java.exe /f", ignore.stderr=T,show.output.on.console = F)

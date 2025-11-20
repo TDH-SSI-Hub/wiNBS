@@ -110,6 +110,38 @@ create_sql_list<-function(vector, quote=T, unique=T){
 }
 
 
+
+#' Log event to sandbox
+#' @param action Action taken by user
+#' @param target Local ID for target of action
+#' @param time_limit Amount of time that can pass before another SQL call is made
+check_in<-function(action='',target='', time_limit=60){
+  .bot_nbs_events<<-c(.bot_nbs_events,action)
+  .bot_nbs_targets<<-c(.bot_nbs_targets,target)
+  if(as.numeric(difftime(Sys.time(), .bot_nbs_check_time, units='secs')) > time_limit ){
+    if(length(.bot_nbs_events)>0){
+    sqlSave(.bot_odbc_sandbox_conn
+            ,data.frame(log_time=as.character(Sys.time())
+                        ,user=.bot_nbs_username
+                        , environment=.bot_nbs_environment
+                        , event=.bot_nbs_events
+                        , target=.bot_nbs_targets)
+            ,'NBS_Bot_Activity'
+            ,rownames = F
+            ,append = T
+    )
+    }
+    .bot_nbs_check_time<<-Sys.time()
+    .bot_nbs_events<<-c()
+    .bot_nbs_targets<<-c()
+  }else{
+    
+  }
+  
+  
+}
+
+
 #' Convert a local ID into a different ID
 #'
 #' @param local_id Patient, lab, case report, or invesigation local ID

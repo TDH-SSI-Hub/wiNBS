@@ -20,6 +20,7 @@ nbs_url_get<-function(){
 #' @return NULL
 #' @export
 nbs_patient_search<-function(id){
+  check_in('Searched for',as.character(id))
   remDr$findElement('id','DEM229')$sendKeysToElement(list(as.character(id)))
   remDr$executeScript('searchPatient();')
   remDr$findElement('xpath','//*[@id="searchResultsTable"]/tbody/tr/td[1]/a')$clickElement()
@@ -37,6 +38,7 @@ nbs_patient_search<-function(id){
 #' @export
 
 nbs_search <- function(ID_value, ID_type = "Investigation ID", verbose=T) {
+  check_in('Searched for',as.character(ID_value))
   remDr$findElements("name", "ESR100_textbox")[[1]]$sendKeysToElement(list(ID_type, key = "tab"))
   remDr$findElements("name", "patientSearchVO.actId")[[1]]$sendKeysToElement(list(ID_value))
   remDr$executeScript("searchPatient();")
@@ -202,6 +204,7 @@ nbs_home_page<-function(check_legacy=F){
 #' @return Nothing
 #' @export
 nbs_user_management <-function(dc_num, type='view'){
+  check_in(paste0('User mgmt ',type), dc_num)
   remDr$navigate(paste0(nbs_url,'loadUser.do?OperationType=',type,'&userID=',dc_num))
   remDr$executeScript('hideBackButtonMessage()')
   return()

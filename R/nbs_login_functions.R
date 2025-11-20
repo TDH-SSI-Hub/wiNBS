@@ -59,6 +59,13 @@ nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi
     demosite<-F
   }
   
+  .bot_nbs_username<<-u
+  .bot_nbs_environment<<-environment
+  .bot_nbs_events<<-c('Logged in to NBS')
+  .bot_nbs_targets<<-c('')
+  .bot_nbs_check_time<<-Sys.time()
+  .bot_odbc_sandbox_conn <<- odbcConnect('Sandbox')
+  
   remDr$navigate(url)
   
 

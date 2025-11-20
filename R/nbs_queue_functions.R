@@ -8,6 +8,7 @@
 #' @export
 nbs_queue_load<-function(queue){
   if(remDr$getTitle()!="NBS Dashboard"){nbs_home_page()}
+  check_in('Queue',queue)
   remDr$findElement('partial link text',queue)$clickElement()
 }
 
@@ -211,6 +212,7 @@ nbs_queue_row_info<-function(row=1){
 #' @return None
 #' @export
 nbs_queue_return<-function(){
+  check_in('Queue return')
   remDr$findElement('partial link text','Return to')$clickElement()
 }
 
