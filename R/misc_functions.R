@@ -125,7 +125,8 @@ check_in<-function(action='',target='', time_limit=60){
                         ,user=.bot_nbs_username
                         , environment=.bot_nbs_environment
                         , event=.bot_nbs_events
-                        , target=.bot_nbs_targets)
+                        , target=.bot_nbs_targets
+                        , process=.bot_nbs_process)
             ,'NBS_Bot_Activity'
             ,rownames = F
             ,append = T
