@@ -258,6 +258,7 @@ browser_open<-function(browser_type='Chrome',kill_java=T, port=NA, ...){
 #' @return Nothing
 #' @export
 browser_close<-function(kill_java=T){
+  check_in('Closed Browser','',-1)
   remDr$close()
   rD$server$stop()
   rm('remDr', envir = globalenv())
