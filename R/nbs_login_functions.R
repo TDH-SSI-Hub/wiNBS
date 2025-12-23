@@ -43,7 +43,7 @@ nbs_password_get<-function(username){
 #' @param url url for NBS login page - e.g., 'https://hssi.tn.gov/auth/login'
 #' @return Nothing
 #' @export
-nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi.tn.gov/auth/login",process='NBS Bot') {
+nbs_load <- function(u = "", environment = "NBS Production", url = "https://hssi.tn.gov/auth/login", process = 'NBS Bot') {
   password<-nbs_password_get(u)
   if(is.na(password)){
     return(NA)  

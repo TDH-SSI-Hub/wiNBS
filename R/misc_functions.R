@@ -216,3 +216,32 @@ NULL
 nbs_back_button_error_dismiss<-function(){
   remDr$executeScript('hideBackButtonMessage()')
 }
+
+
+
+
+template_name<-"nbs_bot_mar_template"
+load_template_script <- function(template_name) {
+  template_path <- system.file(paste0("inst/",template_name, ".R"), package = 'wiNBS')
+  if (file.exists(template_path)) {
+    readLines(template_path)
+  } else {
+    stop("Template not found.")
+  }
+}
+
+template='MAR'
+filename='test'
+nbs_template_create <- function(template, filename){
+  if(!grepl('\\.R$|\\.r$',filename)) filename<-paste0(filename,'.R')
+  filename_base<-gsub('\\.R$|\\.r$','',basename(filename))
+  if(template=='MAR'){
+    temp_lines <- load_template_script('nbs_bot_mar_template')
+    temp_lines <- gsub('!!!',filename_base,temp_lines)
+    writeLines(temp_lines,filename)
+  }else{
+    stop('template must be one of MAR')
+  }
+}
+
+
