@@ -4,7 +4,7 @@
 \alias{nbs_field_get}
 \title{Retrieve field from an investigation page}
 \usage{
-nbs_field_get(id, page_source = NA, note = F, ...)
+nbs_field_get(id, page_source = NA, note = F, legacy = F, ...)
 }
 \arguments{
 \item{id}{String. NBS question_identifier for the field.}
@@ -13,11 +13,13 @@ nbs_field_get(id, page_source = NA, note = F, ...)
 
 \item{note}{T/F. Is the field a note field (with repeating note blocks)}
 
+\item{legacy}{T/F. Is this field on a legacy page?}
+
 \item{...}{Additional arguments passed on to get_note() which determine what info is returned for notes. By default returns the text of the last note.}
 }
 \value{
 string
 }
 \description{
-Retrieve field from an investigation page
+Works best from the view page, might work from edit page. Dropdowns from edit page return all options, not the selected option.
 }

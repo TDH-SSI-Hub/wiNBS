@@ -43,8 +43,11 @@ edit_quick_code<-function(id,val, pre_clear=F, ...){
 #' @export
 edit_text_field<-function(id, val,id_type='name', id_suffix='_textbox' ,pre_clear=T,post_key='tab'){
   new_val<-list()
-  if(pre_clear) new_val<- append(new_val,"\uE009a\uE009")
-  new_val<- append(new_val,val)
+  if(pre_clear) {
+    remDr$findElement(id_type,paste0(id,id_suffix))$clearElement()
+    new_val<- append(new_val,"\uE009a\uE009")
+  }
+  new_val<- append(new_val,as.character(val))
   if(!is.na(post_key)) new_val<- append(new_val,list(key=post_key))
   
   remDr$findElement(id_type,paste0(id,id_suffix))$sendKeysToElement(new_val)
@@ -63,10 +66,21 @@ edit_date<-function(id, val){
   edit_text_field(id,as.character(TNTools::tn_clean_date(val, format = '%m/%d/%Y')), id_suffix = '', id_type = 'id')
 }
 
+#' Edit a legacy field
+#' 
+#' @param name String. HTML name attribute for  field.
+#' @param val String. Text to enter.
+#'
+#' @return NULL
+#' @export
+edit_legacy<-function(name, val){
+  edit_text_field(name,as.character(val), id_suffix = '', id_type = 'name')
+}
+
 #' Edit a note field
 #' 
 #' @param id String. HTML ID for note field.
-#' @param val String. Text to enter
+#' @param val String. Text to enter.
 #'
 #' @return NULL
 #' @export
@@ -181,17 +195,23 @@ nbs_page_metadata_get<-function(page=NA){
 
 #' Submit changes to an investigation
 #'
-#' @param check_submission T/F. Should the feedback bar text be returned?
+#' @param check_submission T/F. Should the feedback bar text be returned (page builder pages only)?
+#' @param legacy T/F. Is this for a legacy page?
 #'
-#' @return Nothing
+#' @return Submission status for page-builder pages. NA for legacy pages.
 #' @export
-nbs_investigation_submit<-function(check_submission=T){
+nbs_investigation_submit<-function(check_submission=T, legacy=F){
+  if(legacy){
+    remDr$findElement('id','submit')$clickElement()
+    return(NA)
+  }else{
   remDr$findElement("id", "SubmitTop")$clickElement()
   if(check_submission){
     remDr$getPageSource() %>% unlist() %>% 
       read_html() %>% 
       html_element('#globalFeedbackMessagesBar') %>% 
       html_text() %>% str_replace_all('\n','') %>% str_trim() %>% unlist()
+  }
   }
 }
 
@@ -260,11 +280,30 @@ nbs_investigation_go_to_deprecated<-function(ID=NA,uid=NA,patient_page=F){
 nbs_investigation_edit<-function(){
   notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()
   # This is the edit button for most accounts, not the delete button
-  remDr$findElement("id", 'delete')$clickElement()
+  if(length(remDr$findElements('id','delete'))==4){
+    notification<-remDr$findElement("id", 'patientSummaryJSP_view_notificationStatus')$getElementText()
+    notification<-!notification %in% c('','REJECTED')
+    remDr$findElement("id", 'delete')$clickElement()
+  }else{
+    notification<-grepl('COMPLETED|Approved',remDr$findElement('id','notificationHistoryTable')$getElementText(), ignore.case = T)
+    
+  remDr$findElement("id", 'edit')$clickElement()
+  }
   # Accept the alert if there is one
-  if(!notification %in% c('','REJECTED')){remDr$acceptAlert()
+  if(notification){remDr$acceptAlert()
     Sys.sleep(.5)
   }
+}
+
+
+#' Cancel out of investigation edits
+#' 
+#'
+#' @return Nothing
+#' @export
+nbs_investigation_cancel<-function(){
+  remDr$findElement("id", 'Cancel')$clickElement()
+  remDr$acceptAlert()
 }
 
 #' Retrieve info from an note field
@@ -322,14 +361,22 @@ get_note<-function(id, page_source=NA, row_start=1, row_end=Inf , columns=1:3, r
 
 #' Retrieve field from an investigation page
 #' 
+#' Works best from the view page, might work from edit page. Dropdowns from edit page return all options, not the selected option.
+#' 
 #' @param id String. NBS question_identifier for the field.
 #' @param page_source Page html. If NA, will pull current browser page (slower). For longer queries, use remDr$getPageSource() to pull the html once.
 #' @param note T/F. Is the field a note field (with repeating note blocks)
+#' @param legacy T/F. Is this field on a legacy page?
 #' @param ... Additional arguments passed on to get_note() which determine what info is returned for notes. By default returns the text of the last note.
 #'
 #' @return string
 #' @export
-nbs_field_get<-function(id,page_source=NA, note = F, ...){
+nbs_field_get<-function(id,page_source=NA, note = F, legacy=F, ...){
+  
+  if(legacy){
+    return(unlist(remDr$findElement('id',id)$getElementText()))
+  }
+  
   if(is.na(page_source)){
     page_source <- remDr$getPageSource() %>% unlist() %>% rvest::read_html()
   }
@@ -343,11 +390,20 @@ nbs_field_get<-function(id,page_source=NA, note = F, ...){
   }
   
   if(note){
-    get_note(id, page_source, Inf, Inf,1)
+    text_extracted<-get_note(id, page_source, Inf, Inf,1)
   }else{
-    page_source %>% html_element(paste0('#',id)) %>% html_text2()
+    if(grepl('Edit',page_source %>% html_element('[name="pageTop"]') %>% html_text2())){
+      text_extracted<-page_source %>% html_element(paste0('#',id)) %>% html_attr('value')
+      if(is.na(text_extracted)){
+        text_extracted<-page_source %>% html_element(paste0('#',id)) %>% xml2::xml_text()
+      }
+      
+    }else{
+      text_extracted<-page_source %>% html_element(paste0('#',id)) %>% html_text2()
+    }
+    
   }
-  
+  return(text_extracted)
   
 }
 
@@ -359,11 +415,15 @@ nbs_field_get<-function(id,page_source=NA, note = F, ...){
 #' @param value String. Value to send to the field.
 #' @param metadata Can be one of several things. A dataframe pulled from nbs_page_metadata_get(), the url for the edit investigation page, the condition name, or the page name. If NA, will attempt to autodetect (slower).
 #' @param check_tab T/F. If FALSE, assumes the element is visible currently (faster). If TRUE, a check is run to see if the correct tab is selected, then selects the tab if not (slower).
-#' 
+#' @param legacy T/F. Is this field on a legacy page?
 #' 
 #' @return NULL
 #' @export
-nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
+nbs_field_set<-function(id,value,metadata=NA, check_tab=F, legacy=F){
+  
+  if(legacy){
+    edit_legacy(id,value)
+  }else{
   
   if(class(metadata)=='data.frame'){
     
@@ -415,6 +475,7 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F){
     edit_date(field_id,value)
   }else{
     message('Unrecognized field type. Self destruct sequence initiated')
+  }
   }
   
 }
@@ -660,7 +721,7 @@ nbs_investigation_race<-function(race,uncheck_others=F){
   )
   
   for (ro in names(race_options)) {
-    if(grepl(ro,sel_races, ignore.case = T)){
+    if(grepl(ro,race, ignore.case = T)){
       
       if(is.null(unlist(remDr$findElement('name',race_options[ro])$getElementAttribute('checked')))){
         remDr$findElement('name',race_options[ro])$clickElement()
@@ -714,4 +775,13 @@ nbs_investigation_transfer<-function(jurisdiction){
   remDr$executeScript('hideBackButtonMessage()')
 }
 
-
+#' Switch to a tab on a legacy page
+#' 
+#' @param tab Number of tab to switch to
+#' 
+#' @return None
+#' @export
+nbs_legacy_tab<-function(tab){
+  tabs<-remDr$findElement('xpath','/html/body/table/tbody/tr/td/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr[1]/td/table')$findChildElements('tag name','td')
+  tabs[[tab*3]]$clickElement()
+}

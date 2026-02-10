@@ -12,6 +12,17 @@ nbs_queue_load<-function(queue){
   remDr$findElement('partial link text',queue)$clickElement()
 }
 
+
+#' Get size of current queue
+#'
+#' Get size of current queue
+#'
+#' @return Size of current queue
+#' @export
+nbs_queue_size<-function(){
+  as.numeric(remDr$findElement('id','queueCnt')$getElementAttribute('value'))
+}
+
 #' Filter queue
 #'
 #' Open a queue's dropdown filter and select specified elements.

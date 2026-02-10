@@ -7,7 +7,8 @@
 nbs_load(
   u = "",
   environment = "NBS Production",
-  url = "https://hssi.tn.gov/auth/login"
+  url = "https://hssi.tn.gov/auth/login",
+  process = "NBS Bot"
 )
 }
 \arguments{

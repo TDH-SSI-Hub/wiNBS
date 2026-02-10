@@ -39,6 +39,12 @@ parameter `wmic=F` to their `browser_open()` calls. After some testing,
 `wmic=F` will become the default. Users with `wmic` should be able to
 use both methods to open browsers.
 
+#### Other Requirements
+
+You will also need STS to install Java on your machine, and set up an
+ODBC connection to the Sandbox (name the connection ‘Sandbox’). Reach
+out to the informatics team for assistance, if needed.
+
 ## Workflow
 
 The functions in `wiNBS` create or utilize the global object `remDr`,
@@ -84,6 +90,19 @@ and printed pdfs.
 Running the function does not return a value, but the browser object
 `remDr` is created in the global environment.
 
+``` r
+# Open a browser (chrome is the default)
+browser_open()
+
+# Open a browser without terminating java operations
+# Only used if running multiple bots in parallel
+browser_open(kill_java = F)
+
+# Open a browser and manually specify the chromedriver version
+# May be needed if your version can't be determined automatically
+browser_open(chrome_ver='143.23.43.12')
+```
+
 ## Logging in to NBS
 
 To log in to NBS, you first need to set your password on your machine.
@@ -104,7 +123,11 @@ Once you have set your password, you can use `nbs_load('your_username')`
 to log in to NBS. This will navigate to NBS, log in with your username
 and password, and select the production environment (can change using
 the `environment` parameter). Non-TN jurisdictions will also need to
-specify their own login url using the `url` parameter.
+specify their own login url using the `url` parameter. For established
+or large processes, please specify the `process` parameter (e.g.,
+`nbs_load('your_username', process='Hep Data Closeout')`) so that we
+know what people are doing in the system. For testing/experimentation,
+this is not generally necessary.
 
 ``` r
 # Open a browser, Chrome is the default
@@ -118,6 +141,9 @@ nbs_password_set(username,'fake_password23')
 
 # Log in to NBS
 nbs_load(username)
+
+# Log in to NBS Staging, specify process
+nbs_load(username, environment='NBS Staging', process='HAI DQ')
 ```
 
 ## General use functions
@@ -249,12 +275,19 @@ to go to a lab/morb/case report from anywhere in NBS. When inside a
 document, you can use `nbs_lab_mark_as_reviewed()` to mark it as
 reviewed, if possible. For some program areas, a processing decision is
 required; this can be provided as a string if needed
-(e.g. `nbs_lab_mark_as_reviewed('Administrative Closure')`). In the
-future, we can also add a function which logs labs to be marked as
-reviewed in the Sandbox MAR table. This would allow for bulk marking as
-reviewed via backend SQL scripts that are scheduled to run 3x a day.
-Note that `nbs_lab_mark_as_reviewed()` should work on morbidity reports
-and case reports in addition to labs.
+(e.g. `nbs_lab_mark_as_reviewed('Administrative Closure')`).
+
+Instead of creating a bot script to mark labs, morbs, and case reports
+as reviewed, you can also use `flag_for_mark_as_reviewed()` to add those
+events to a Sandbox table which will log them for marking as reviewed
+via a SQL stored procedure that runs periodically throughout the day.
+
+`nbs_lab_associate()` can be used to associate a lab to one or more
+investigations. Unfortunately this function requires the case UID, which
+is different from the case local ID. Reach out to informatics for help
+on getting the UID for cases. If you provide a non-existent uid, and set
+`disassociate_unlisted=F`, it is possible to remove all associations
+from a lab.
 
 ``` r
 # Go to lab with lab-specific function
@@ -265,6 +298,12 @@ nbs_go_to('DOC12345678')
 
 # Mark lab as reviewed
 nbs_lab_mark_as_reviewed()
+
+# Flag several labs for MAR, without needing a bot
+list_of_labs<-c('OBS11111111','OBS22222222','OBS33333333')
+flag_for_mark_as_reviewed(list_of_labs)
+
+nbs_lab_associate(1234567)
 ```
 
 ## Investigations
@@ -332,6 +371,29 @@ nbs_investigation_race('Black or African American, Other')
 # Also unchecks any other previously check box
 nbs_investigation_race('Black or African American, Other', uncheck_others=T)
 ```
+
+## Legacy Pages
+
+Some functionality in the above functions is not available on legacy
+pages. You can always use the fundamentals of RSelenium scripts to
+perform various actions on these pages. For some functions, legacy pages
+are supported with changes and/or the need to specify `legacy=T`:
+
+- `nbs_mark_as_reviewed()` should work fine
+
+- `nbs_investigation_edit()` should work with no issues
+
+- `nbs_field_get(id,legacy=T)` will only work from the view page, not
+  the edit, and the field must be visible on the page
+
+- `nbs_field_set(id,value,legacy=T)` will work in a basic way, but lacks
+  any sort of field validation or automated tab switching
+
+- `nbs_investigation_submit(legcay=T)` should click the submit button,
+  but will not return any information about the success of the
+  submission
+
+- `nbs_legacy_tab()` can be used to switch between tabs on legacy pages
 
 ## User Management
 

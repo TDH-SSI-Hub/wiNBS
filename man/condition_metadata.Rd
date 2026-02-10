@@ -5,7 +5,7 @@
 \alias{condition_metadata}
 \title{Dataframe of condition metadata}
 \format{
-An object of class \code{data.frame} with 260 rows and 35 columns.
+An object of class \code{data.frame} with 289 rows and 35 columns.
 }
 \usage{
 condition_metadata

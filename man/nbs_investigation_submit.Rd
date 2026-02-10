@@ -4,13 +4,15 @@
 \alias{nbs_investigation_submit}
 \title{Submit changes to an investigation}
 \usage{
-nbs_investigation_submit(check_submission = T)
+nbs_investigation_submit(check_submission = T, legacy = F)
 }
 \arguments{
-\item{check_submission}{T/F. Should the feedback bar text be returned?}
+\item{check_submission}{T/F. Should the feedback bar text be returned (page builder pages only)?}
+
+\item{legacy}{T/F. Is this for a legacy page?}
 }
 \value{
-Nothing
+Submission status for page-builder pages. NA for legacy pages.
 }
 \description{
 Submit changes to an investigation

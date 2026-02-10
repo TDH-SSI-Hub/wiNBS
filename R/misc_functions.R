@@ -245,3 +245,55 @@ nbs_template_create <- function(template, filename){
 }
 
 
+
+
+
+#' Flag labs, morbs, or case reports to be marked as reviewed
+#'
+#' @param ids Local IDs for labs, morb reports, or case reports
+#' @param environment Either 'NBS Production' or 'NBS Staging'
+#' @param program Program area that is responsible for these events or who is running the code.
+#' @param requested_by Program area that is responsible for these events or who is running the code.
+#' @param comments Brief description of why these are being marked as reviewed.
+#'
+#' @return Nothing
+#' @export
+flag_for_mark_as_reviewed<-function(ids,environment,program,requested_by,comments){
+  
+  if(!environment %in% c('NBS Production','NBS Staging')) stop("ERROR: environment must be 'NBS Production' or 'NBS Staging'")
+  
+  upload_df<-data.frame(Local_ID=as.character(ids),
+                        Environment=as.character(environment),
+                        Program=as.character(program),
+                        Requested_by=as.character(requested_by),
+                        Comments=as.character(comments)
+  )
+  
+  upload_df$Requested_date<-as.character(Sys.time())
+  upload_df$Class<-'Lab'
+  upload_df$Class[grepl('morb',upload_df$Class, ignore.case = T)]<-'Morb'
+  upload_df$Class[grepl('DOC',upload_df$Local_ID, ignore.case = T)]<-'Case Report'
+  upload_df$Status<-'Pending'
+  upload_df$Status_date<-as.character(Sys.time())
+  
+  upload_df<-upload_df[,c('Local_ID','Environment','Program','Requested_by','Requested_date','Comments','Class','Status','Status_date')]
+  
+  sand<-odbcConnect('Sandbox')
+  sqlSave(sand,upload_df,'NBS_Mark_As_Reviewed', rownames = F, append = T)
+  
+  runtimes<-c(6,10,12,16,20)
+  
+  next_runs<-runtimes[runtimes > lubridate::hour(as.POSIXct(Sys.time(),'America/Chicago'))]
+  
+  if(length(next_runs)==0){
+    next_time<-runtimes[1]
+  }else{
+    next_time<-next_runs[1]
+  }
+  
+  num_stuff<-table(upload_df$Class)
+  
+  message(paste0(paste0(num_stuff,' ', names(num_stuff), collapse=', '),' scheduled for MAR at ',next_time,':00 CT'))
+  message('See the NBS_Mark_As_Reviewed table in the Sandbox to check the status')
+}
+
