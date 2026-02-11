@@ -163,12 +163,17 @@ chrome_window_switch <- function( windowId) {
 #' @export
 window_switch<-function( windowId=NA, close_old=F, verbose=F) {
   if(is.na(windowId)){
-    home.window <- remDr$getCurrentWindowHandle()[[1]]
     all.window <- remDr$getWindowHandles()
-    windowId <- all.window[!all.window %in% home.window]
+    if(length(all.window)==1){
+      windowId<-all.window
+    }else{
+      home.window <- remDr$getCurrentWindowHandle()[[1]]
+      windowId <- all.window[!all.window %in% home.window]
+    }
+    
   }
   if(length(windowId)==1){
-    if(close_old) remDr$closeWindow()
+    if(close_old & length(all.window)!=1) remDr$closeWindow()
     qpath <- sprintf("%s/session/%s/window", remDr$serverURL, remDr$sessionInfo[["id"]])
     remDr$queryRD(qpath, "POST", qdata = list(handle = windowId[[1]]))
     if(verbose) print(unlist(remDr$getTitle()))

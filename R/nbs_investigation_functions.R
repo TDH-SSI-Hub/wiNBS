@@ -795,10 +795,13 @@ nbs_legacy_tab<-function(tab){
 #' @return Status of investigation creation
 #' @export
 nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),initial_data=list()){
+  if(!grepl('SubmitAndCreateInvestigation',remDr$getCurrentUrl())){
+    
   
   if(remDr$getTitle()!='View Patient File') stop('This function can only be called from the patient page. To create an investigation from a lab, use nbs_investigation_from_lab')
   remDr$executeScript("getWorkUpPage('/nbs/ViewFile1.do?ContextAction=AddInvestigation');")
   nbs_back_button_error_dismiss()
+  }
   
   edit_text_field('ccd_textbox',condition,'name','')
   if(!is.null(names(pre_submit_fields))){
@@ -808,35 +811,29 @@ nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),init
     nbs_investigation_submit(legacy=T)
     window_switch()
     edit_text_field('reviewReason_textbox', pre_submit_fields[['reviewReason_textbox']],'name','')
-    remDr$executeScript('var opener = getDialogArgument();
-        if(checkRequired()){
-		    return false;
-        }
-        
-	        var reason = getElementByIdOrByName("reviewReason").value;
-	        getElementByIdOrByNameNode("ProcessingDecision", opener.document).value=reason;
-	        getElementByIdOrByNameNode("investigationType", opener.document).value="New";
-	        //opener.submitForm();
-	        //opener.document.forms[0].submit();
-	        if(opener.submitDialog==undefined)//eICR > Choose Condition XSP page > select processing decision
-				opener.document.forms[0].submit();
-			else
-				opener.submitDialog("submitFromProcessingDecision");
-	    
+    
+    remDr$findElement('xpath','//*[@id="topProcessingDecisionId"]/input[2]')$clickElement()
 
-        var invest = getElementByIdOrByNameNode("blockparent", opener.document);
-        invest.style.display = "none";
-        window.returnValue ="true";')
-    window_switch(close_old = T)
+    window_switch()
   }else{
     nbs_investigation_submit(legacy=T)
   }
   
+  metadata<-nbs_page_metadata_get(condition)
+  
+  if(nrow(metadata)>0){
+    legacy<-F
   for(d in names(initial_data)){
-    nbs_field_set(d,initial_data[[d]], metadata = condition, check_tab = T)
+    nbs_field_set(d,initial_data[[d]], metadata = metadata, check_tab = T)
+  }
+  }else{
+    legacy<-T
+    for(d in names(initial_data)){
+      edit_legacy(d,initial_data[[d]])
+    }
   }
   
-  return(nbs_investigation_submit())
+  return(nbs_investigation_submit(legacy=legacy))
   
   
 }

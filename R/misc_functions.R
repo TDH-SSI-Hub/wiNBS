@@ -315,3 +315,33 @@ test_append<-function(Test, Passed){
     message(paste0('Test FAILED: ',Test))
   }
 }
+
+
+
+#' Pull all the tables from a patient's page
+#'
+#' This will pull all tables with information.
+#'
+#' @return List of dataframes
+#' @export
+nbs_tables<-function(page_type){
+  
+  if(page_type=='person'){
+    tclass<-'.bluebardtTable'
+  }else{
+    tclass<-'.dtTable'
+  }
+  page_source <- remDr$getPageSource() %>% unlist() %>% rvest::read_html()
+  
+  tables<-page_source %>% html_elements(tclass)
+  
+  suppressWarnings({
+    table_data<-tables %>%  html_table()
+  })
+  
+  table_names<-tables %>% html_attr('id')
+  
+  names(table_data) <- table_names
+  
+  return(lapply(table_data[!is.na(table_names)], function(x) as.data.frame(janitor::clean_names(x))))
+}

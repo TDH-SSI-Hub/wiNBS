@@ -185,3 +185,44 @@ nbs_lab_associate<-function(case_uids, disassociate_unlisted=F){
 }
 
 
+
+#' Create a lab from the patient page
+#' 
+#' @param fields A list of data fields to populate with information. 
+#' @param inv_create T/F Should an investigation be created from this lab?
+#' @param ...  If inv_create=TRUE, ... must contain parameters needed by nbs_investigation_from_patient()
+#' 
+#' @return Local ID of created observation
+#' @export
+nbs_lab_create<-function(fields,inv_create=F,...){
+  if(remDr$getTitle()!='View Patient File') stop('This function can only be called from the patient page.')
+  existing_data<-nbs_tables('person')
+  if('eventLabReport' %in%  names(existing_data)){
+    old_ids<-existing_data[['eventLabReport']]$event_id
+  }else{
+    old_ids<-''
+  }
+  
+  remDr$executeScript("getWorkUpPage('/nbs/ViewFile1.do?ContextAction=AddLab');")
+  nbs_back_button_error_dismiss()
+  lab_metadata<-metadata[metadata$investigation_form_cd=='LAB_Lab_Report',]
+  
+  for(f in names(fields)){
+    if(tolower(f)=='add'){
+      remDr$executeScript("if (pgRESULTED_TEST_CONTAINERBatchAddFunction()) writeQuestion('RESULTED_TEST_CONTAINER','patternRESULTED_TEST_CONTAINER','questionbodyRESULTED_TEST_CONTAINER');")
+    }else{
+      nbs_field_set(f,fields[[f]], metadata = lab_metadata, check_tab = T)
+    }
+  }
+  
+  if(inv_create){
+    remDr$findElement('name','SubmitAndCreateInvestiation')$clickElement()
+    nbs_investigation_from_patient(...)
+    remDr$findElement('link text','View File')$clickElement()
+  }else{
+    nbs_investigation_submit()
+  }
+  
+  new_ids<-nbs_tables('person')[['eventLabReport']]$event_id
+  return(new_ids[!new_ids %in% old_ids])
+}
