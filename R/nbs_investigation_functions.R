@@ -174,7 +174,7 @@ nbs_page_metadata_get<-function(page=NA){
     if(grepl('invFormCd=',page)){
       page<-substr(page,str_locate(page,'invFormCd=')[2]+1,nchar(page))
     }else{
-      page<-gsub('View Investigation: ','',remDr$findElement('xpath','//*[@id="bd"]/h1/table/tbody/tr[1]/td[1]/a')$getElementText())
+      page<-gsub('View Investigation: |Add Investigation: ','',remDr$findElement('xpath','//*[@id="bd"]/h1/table/tbody/tr[1]/td[1]/a')$getElementText())
       page<-condition_metadata$investigation_form_cd[condition_metadata$condition_short_nm==page]
     }
   } else if(grepl('invFormCd=',page)){
@@ -785,3 +785,61 @@ nbs_legacy_tab<-function(tab){
   tabs<-remDr$findElement('xpath','/html/body/table/tbody/tr/td/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr[1]/td/table')$findChildElements('tag name','td')
   tabs[[tab*3]]$clickElement()
 }
+
+#' Create an investigation from a patient page
+#' 
+#' @param condition Condition to create. Must match dropdown value exactly.
+#' @param pre_submit_fields Only for HIV/STI. Named list with exact values for referralBasis_textbox and reviewReason_textbox.
+#' @param initial_data Optional. Named list with data elements and their desired values.
+#' 
+#' @return Status of investigation creation
+#' @export
+nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),initial_data=list()){
+  
+  if(remDr$getTitle()!='View Patient File') stop('This function can only be called from the patient page. To create an investigation from a lab, use nbs_investigation_from_lab')
+  remDr$executeScript("getWorkUpPage('/nbs/ViewFile1.do?ContextAction=AddInvestigation');")
+  nbs_back_button_error_dismiss()
+  
+  edit_text_field('ccd_textbox',condition,'name','')
+  if(!is.null(names(pre_submit_fields))){
+    if(!'referralBasis_textbox' %in% names(pre_submit_fields) | !'reviewReason_textbox' %in% names(pre_submit_fields)) stop('pre_submit_fields must contain reviewReason_textbox and referralBasis_textbox with correct dropdown selections. This field is only for STI and HIV conditions. Use NA or list() otherwise.')
+    edit_text_field('referralBasis_textbox', pre_submit_fields[['referralBasis_textbox']],'name','')
+    
+    nbs_investigation_submit(legacy=T)
+    window_switch()
+    edit_text_field('reviewReason_textbox', pre_submit_fields[['reviewReason_textbox']],'name','')
+    remDr$executeScript('var opener = getDialogArgument();
+        if(checkRequired()){
+		    return false;
+        }
+        
+	        var reason = getElementByIdOrByName("reviewReason").value;
+	        getElementByIdOrByNameNode("ProcessingDecision", opener.document).value=reason;
+	        getElementByIdOrByNameNode("investigationType", opener.document).value="New";
+	        //opener.submitForm();
+	        //opener.document.forms[0].submit();
+	        if(opener.submitDialog==undefined)//eICR > Choose Condition XSP page > select processing decision
+				opener.document.forms[0].submit();
+			else
+				opener.submitDialog("submitFromProcessingDecision");
+	    
+
+        var invest = getElementByIdOrByNameNode("blockparent", opener.document);
+        invest.style.display = "none";
+        window.returnValue ="true";')
+    window_switch(close_old = T)
+  }else{
+    nbs_investigation_submit(legacy=T)
+  }
+  
+  for(d in names(initial_data)){
+    nbs_field_set(d,initial_data[[d]], metadata = condition, check_tab = T)
+  }
+  
+  return(nbs_investigation_submit())
+  
+  
+}
+
+
+

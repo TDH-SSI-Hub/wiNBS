@@ -297,3 +297,21 @@ flag_for_mark_as_reviewed<-function(ids,environment,program,requested_by,comment
   message('See the NBS_Mark_As_Reviewed table in the Sandbox to check the status')
 }
 
+#' Function for testing wiNBS
+#' @param Test String of what the test is attempting
+#' @param Passed T/F. Did the test pass?
+test_append<-function(Test, Passed){
+  if(!exists('test_df')){
+    test_df<<-data.frame(Test=c(), Passed=c())
+  }
+  test_df<-test_df[test_df$Test!=Test,]
+  test_df<<-rbind(test_df,
+                  data.frame( Test=Test
+                              , Passed = Passed
+                  ))
+  if(Passed){
+    message(paste0('Test passed: ',Test))
+  }else{
+    message(paste0('Test FAILED: ',Test))
+  }
+}
