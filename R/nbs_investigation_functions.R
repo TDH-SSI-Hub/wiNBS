@@ -850,7 +850,7 @@ nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),init
       edit_legacy(d,initial_data[[d]])
     }
   }
-  
+  Sys.sleep(.5)
   return(nbs_investigation_submit(legacy=legacy))
   
   

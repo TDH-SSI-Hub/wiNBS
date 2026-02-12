@@ -111,7 +111,13 @@ nbs_lab_go_to<-function(ID=NA,uid=NA,patient_page=F, verbose=T){
 #' @return Status message bar, or 'No association' as appropriate
 #' @export
 nbs_lab_associate<-function(case_uids, disassociate_unlisted=F){
-  remDr$findElement('name','AssociateInvestigations')$clickElement() 
+  legacy<-nbs_page_is_legacy()
+  if(legacy){
+    button_name<-'Associate Investigation'
+  }else{
+    button_name<-'Associate AssociateInvestigations'
+  }
+  remDr$findElement('name',button_name)$clickElement() 
   
   # Find table with possible associations
   inv.table<-remDr$findElements("class", 'dtTable')[[1]]$findChildElements('tag name', 'tr')
@@ -154,7 +160,8 @@ nbs_lab_associate<-function(case_uids, disassociate_unlisted=F){
   if(changed_something){
     remDr$findElement('id','Submit')$clickElement()
     if(!anything_checked) remDr$acceptAlert()
-    if(window_switch(verbose=F)){
+    other_windows<-length(remDr$getWindowHandles())
+    if(other_windows==2){
       remDr$findElement('name','theProcessingDecision_textbox')$sendKeysToElement(list('Administrative Closure'))
       remDr$executeScript('var opener = getDialogArgument();
       var reason = getElementByIdOrByName("theProcessingDecision").value;
@@ -175,8 +182,11 @@ nbs_lab_associate<-function(case_uids, disassociate_unlisted=F){
       window_switch()
       window_switch(close_old=T)
     }
-    
-    return(unlist(remDr$findElement('id','globalFeedbackMessagesBar')$getElementText()))
+    if(legacy){
+      return(unlist(remDr$findElement('id','error1')$getElementText()))
+    }else{
+      return(unlist(remDr$findElement('id','globalFeedbackMessagesBar')$getElementText()))
+    }
   }else{
     remDr$findElement('id','Cancel')$clickElement()
     remDr$acceptAlert()

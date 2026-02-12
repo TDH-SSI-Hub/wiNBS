@@ -1,4 +1,5 @@
 library(wiNBS)
+library(testthat)
 
 test_that("Password set and get", {
   new_password<-paste0('testpassword',round(runif(1)*1000))
@@ -167,6 +168,7 @@ test_that('Create Ebola lab from patient page', {
 
 test_that('Create Ebola lab from patient page with HIV inv', {
 
+  condition<-'AIDS'
   pre_submit_fields<-list()
   initial_data<-list(DEM196='Created via script'
                       ,INV111=as.character(Sys.Date())
@@ -224,10 +226,12 @@ test_that('Go to lab from patient page', {
 
 test_that('Edit lab data', {
   remDr$findElement('name','edit')$clickElement()
+  Sys.sleep(1)
   nbs_field_set('NBS_LAB197',Sys.Date(),metadata = 'LAB_Lab_Report')
   
   expect_true(nbs_investigation_submit()=='')
-  expect_equal(nbs_field_get('NBS_LAB197')==format(Sys.Date(),"%m/%d/%Y"))
+  Sys.sleep(1)
+  expect_equal(nbs_field_get('NBS_LAB197'),format(Sys.Date(),"%m/%d/%Y"))
   nbs_queue_return()
 })
 
@@ -426,7 +430,7 @@ test_that('nbs_field_set on dropdown 1', {
 
 
 
-test_that('Edit multiple field types', {
+test_that('Edit multiple field types 2', {
   nbs_investigation_edit()
   # Date field
   nbs_field_set('INV147',Sys.Date(), check_tab = T)
@@ -437,7 +441,8 @@ test_that('Edit multiple field types', {
   nbs_field_set('DEM196',random_text2, check_tab = T)
   # Dropdown
   nbs_field_set('NOT113','Shelby County', check_tab = T)
-  expect_equal(nbs_investigation_submit(),"Investigation has been successfully saved in the system.")
+  inv_submitted<-nbs_investigation_submit()
+  expect_equal(inv_submitted,"Investigation has been successfully saved in the system.")
 })
 
 test_that('nbs_field_set on date 2', {
@@ -456,7 +461,65 @@ test_that('nbs_field_set on dropdown 2', {
   expect_equal(nbs_field_get('NOT113'),'Shelby County')
 })
 
+test_that('Create Morb Report from patient', {
+  nbs_go_to(new_patient_id)
+  fields<-list(conditionCd_textbox='Chlamydia trachomatis infection'
+               ,morbidityReport.theObservationDT.jurisdictionCd_textbox='Central Office'
+               ,morbidityReport.theObservationDT.activityToTime_s=format(Sys.Date(),"%m/%d/%Y")
+               ,'entity-codeLookupText-Org-ReportingOrganizationUID'='VUCH'
+               ,click='//*[@id="entity-table-Org-ReportingOrganizationUID"]/thead/tr/td[2]/input[2]')
+  
+  new_morb_id<<-nbs_morb_create(fields)
+  expect_match(new_morb_id,'OBS')
+})
+
+test_that('Create Morb Report from patient and also create inv', {
+  nbs_go_to(new_patient_id)
+  fields<-list(conditionCd_textbox='Gonorrhea'
+               ,morbidityReport.theObservationDT.jurisdictionCd_textbox='Central Office'
+               ,morbidityReport.theObservationDT.activityToTime_s=format(Sys.Date(),"%m/%d/%Y")
+               ,'entity-codeLookupText-Org-ReportingOrganizationUID'='VUCH'
+               ,click='//*[@id="entity-table-Org-ReportingOrganizationUID"]/thead/tr/td[2]/input[2]')
+  
+  initial_data<-list(NBS161='AA'
+                     ,NBS162=Sys.Date()
+                     ,NBS143='6-Yes, Notifiable')
+  
+  new_morb_id<-nbs_morb_create(fields, T, 'Field Follow-Up',initial_data)
+  expect_match(new_morb_id,'OBS')
+})
+
+test_that('Associate Morb Report to case', {
+  nbs_go_to(new_patient_id)
+  all_t<-nbs_tables('person')
+  ebola_inv<-all_t$eventSumaryInv$investigation_id[all_t$eventSumaryInv$condition=='Ebola hemorrhagic fever']
+  nbs_investigation_go_to(ebola_inv, patient_page = T)
+  ebola_uid<-stringr::str_extract(unlist(remDr$getCurrentUrl()),'\\d+$')
+  nbs_go_to(new_morb_id, prefer_morbs = T)
+  
+  morb_assoc<-nbs_lab_associate(ebola_uid)
+  
+  expect_match(morb_assoc,'Morbidity Report successfully associated')
+})
 
 
 
- 
+test_that('RELEASE - View ELR in DRR',{
+  nbs_queue_load('Documents Requiring Review')
+  nbs_queue_filter(1,'Lab Report', select_all = T)
+  for(i in 1:20){
+    has_elr_ind<-length(remDr$findElement('xpath',paste0('//*[@id="parent"]/tbody/tr[',i,']/td[2]'))$findChildElements('tag name','img'))
+    if(has_elr_ind) break
+  }
+  
+  if(has_elr_ind){
+    nbs_queue_row_click(1,2)
+  }
+  
+  expect_match(unlist(remDr$getCurrentUrl()),'observationUID')
+})
+
+
+
+
+
