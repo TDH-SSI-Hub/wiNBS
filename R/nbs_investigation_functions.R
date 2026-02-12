@@ -812,9 +812,26 @@ nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),init
     window_switch()
     edit_text_field('reviewReason_textbox', pre_submit_fields[['reviewReason_textbox']],'name','')
     
-    remDr$findElement('xpath','//*[@id="topProcessingDecisionId"]/input[2]')$clickElement()
+    remDr$executeScript('var opener = getDialogArgument();
+        if(checkRequired()){
+		    return false;
+        }
+        
+	        var reason = getElementByIdOrByName("reviewReason").value;
+	        getElementByIdOrByNameNode("ProcessingDecision", opener.document).value=reason;
+	        getElementByIdOrByNameNode("investigationType", opener.document).value="New";
+	        //opener.submitForm();
+	        //opener.document.forms[0].submit();
+	        if(opener.submitDialog==undefined)//eICR > Choose Condition XSP page > select processing decision
+				opener.document.forms[0].submit();
+			else
+				opener.submitDialog("submitFromProcessingDecision");
+	    
 
-    window_switch()
+        var invest = getElementByIdOrByNameNode("blockparent", opener.document);
+        invest.style.display = "none";
+        window.returnValue ="true";')
+    window_switch(close_old = T)
   }else{
     nbs_investigation_submit(legacy=T)
   }
