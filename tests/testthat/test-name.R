@@ -1,6 +1,7 @@
 library(wiNBS)
 library(testthat)
 
+#start_time<-Sys.time()
 test_that("Password set and get", {
   new_password<-paste0('testpassword',round(runif(1)*1000))
   nbs_password_set('test',new_password)
@@ -520,6 +521,6 @@ test_that('RELEASE - View ELR in DRR',{
 })
 
 
-
+#Sys.time()-start_time
 
 
