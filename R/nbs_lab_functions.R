@@ -204,8 +204,8 @@ nbs_lab_create<-function(fields,inv_create=F,...){
   }
   
   remDr$executeScript("getWorkUpPage('/nbs/ViewFile1.do?ContextAction=AddLab');")
-  nbs_back_button_error_dismiss()
-  lab_metadata<-metadata[metadata$investigation_form_cd=='LAB_Lab_Report',]
+  wiNBS:::nbs_back_button_error_dismiss()
+  lab_metadata<-page_metadata[page_metadata$investigation_form_cd=='LAB_Lab_Report',]
   
   for(f in names(fields)){
     if(tolower(f)=='add'){
@@ -216,6 +216,7 @@ nbs_lab_create<-function(fields,inv_create=F,...){
   }
   
   if(inv_create){
+    Sys.sleep(1)
     remDr$findElement('name','SubmitAndCreateInvestiation')$clickElement()
     nbs_investigation_from_patient(...)
     remDr$findElement('link text','View File')$clickElement()

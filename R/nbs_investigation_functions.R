@@ -448,8 +448,8 @@ nbs_field_set<-function(id,value,metadata=NA, check_tab=F, legacy=F){
     tab_id<-gsub('tabs0tab','tabs0head',find_ancestor(test_x,'id','tabs0tab\\d'))
     tab_index<-as.numeric(substr(tab_id,nchar(tab_id),nchar(tab_id)))+1
     tab_info<-ps %>%
-      html_element(xpath=paste0('//*[@id="',tab_id,'"]')) %>%
-      html_attr('class')
+      rvest::html_element(xpath=paste0('//*[@id="',tab_id,'"]')) %>%
+      rvest::html_attr('class')
     if(tab_info!='ongletTextEna'){
       #message(paste0('Switching to tab ',tab_index))
       remDr$findElement('xpath',paste0('//*[@id="',tab_id,'"]'))$clickElement()
@@ -800,7 +800,7 @@ nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),init
   
   if(remDr$getTitle()!='View Patient File') stop('This function can only be called from the patient page. To create an investigation from a lab, use nbs_investigation_from_lab')
   remDr$executeScript("getWorkUpPage('/nbs/ViewFile1.do?ContextAction=AddInvestigation');")
-  nbs_back_button_error_dismiss()
+  wiNBS:::nbs_back_button_error_dismiss()
   }
   
   edit_text_field('ccd_textbox',condition,'name','')
@@ -842,6 +842,7 @@ nbs_investigation_from_patient<-function(condition,pre_submit_fields=list(),init
     legacy<-F
   for(d in names(initial_data)){
     nbs_field_set(d,initial_data[[d]], metadata = metadata, check_tab = T)
+    Sys.sleep(.5)
   }
   }else{
     legacy<-T
