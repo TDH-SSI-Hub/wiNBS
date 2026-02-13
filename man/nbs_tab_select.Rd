@@ -4,15 +4,17 @@
 \alias{nbs_tab_select}
 \title{Select a tab from an investigation, lab, or patient page}
 \usage{
-nbs_tab_select(tab)
+nbs_tab_select(tab, legacy = F)
 }
 \arguments{
 \item{tab}{Number for the tab you wish to click. 1 is farthest left.}
+
+\item{legacy}{T/F. Is the current page a legacy page? Use NA to autodetect if needed (slower).}
 }
 \value{
 Nothing
 }
 \description{
-This function can be used to select a new (or the same) tab in patient pages and NBS labs and investigations that are pagebuilder pages (i.e., not legacy).
+This function can be used to select a new (or the same) tab in patient pages and NBS labs and investigations.
 Use the number of the tab you wish to select. You can call this function on the view or edit page.
 }

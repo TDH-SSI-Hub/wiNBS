@@ -154,9 +154,12 @@ is legacy or not. Some functions in this package do not accommodate
 legacy pages. `nbs_pdf_print()` should work from most pages with a print
 option. Currently, printing only works with Chrome browsers.
 
-On any non-legacy page, you can use `nbs_tab_select()` to click into a
-different tab. You need to provide this function with the tab index, not
-the text on the tab.
+You can use `nbs_tab_select()` to click into a different tab. You need
+to provide this function with the tab index, not the text on the tab.
+
+`nbs_tables()` will return a list of tables that have data from the
+patient page (`nbs_tables('person')`) or a queue
+(`nbs_tables('queue')`).
 
 ## Searching
 
@@ -270,11 +273,20 @@ nbs_report('Custom Report for Disease Counts by County'
 
 ## Labs, Morbs, and Case Reports
 
+You can create a lab or morb report from the patient page using
+`nbs_lab_create()` or `nbs_morb_create()`. Can also create an associated
+investigation with `create_inv = T`.
+
 `nbs_lab_go_to()`, `nbs_morb_go_to()`, and `nbs_doc_go_to()`can be used
-to go to a lab/morb/case report from anywhere in NBS. When inside a
-document, you can use `nbs_lab_mark_as_reviewed()` to mark it as
-reviewed, if possible. For some program areas, a processing decision is
-required; this can be provided as a string if needed
+to go to a lab/morb/case report from anywhere in NBS. Typically these
+functions will back out to the home page and search for the event, but
+if called from a patient page with `patient_page = T`, this function
+will go directly to the event from the patient page (faster). This is
+the main advantage between these functions and `nbs_go_to()`, which is a
+more versatile function. When inside a document, you can use
+`nbs_lab_mark_as_reviewed()` to mark it as reviewed, if possible. For
+some program areas, a processing decision is required; this can be
+provided as a string if needed
 (e.g. `nbs_lab_mark_as_reviewed('Administrative Closure')`).
 
 Instead of creating a bot script to mark labs, morbs, and case reports
@@ -286,8 +298,13 @@ via a SQL stored procedure that runs periodically throughout the day.
 investigations. Unfortunately this function requires the case UID, which
 is different from the case local ID. Reach out to informatics for help
 on getting the UID for cases. If you provide a non-existent uid, and set
-`disassociate_unlisted=F`, it is possible to remove all associations
+`disassociate_unlisted = T`, it is possible to remove all associations
 from a lab.
+
+`nbs_investigation_edit()`,`nbs_investigation_submit()`,
+`nbs_field_set()`, and `nbs_field_get()` are detailed in the
+investigation section below, but they should also work with labs and
+morbidity reports as well.
 
 ``` r
 # Go to lab with lab-specific function
@@ -308,6 +325,12 @@ nbs_lab_associate(1234567)
 
 ## Investigations
 
+`nbs_investigation_from_patient()` can be used to create a new
+investigation from the patient page. Some program areas will need to
+specify a list of data fields required before submission using
+`pre_submit_fields=list()`, and initial data to populate the
+investigation can be provided using `initial_data=list()`.
+
 `nbs_investigation_go_to()` can be used to go directly to an
 investigation. Once in the investigation, you can use
 `nbs_page_metadata_get()` to import the metadata for the current
@@ -317,8 +340,10 @@ by reading in a csv of their page metadata (for now). This metadata can
 be used to find the IDs for `nbs_field_get()` and also passed as a
 parameter in order to speed up the function. `nbs_field_get()` will
 return the current value, if any, for a given field. This function only
-works from the ‘View Investigation’ page, not the ‘Edit Investigation’
-page, although this functionality may be added later.
+works consistently from the ‘View Investigation’ page. On the ‘Edit
+Investigation’ page some fields may work; others won’t. As an example,
+using this on dropdowns from the edit page will return all dropdown
+options, not the selected one.
 
 To transfer an investigation to a different jurisdiction, you can use
 `nbs_investigation_transfer()` from the investigation’s view page.
@@ -389,11 +414,9 @@ are supported with changes and/or the need to specify `legacy=T`:
 - `nbs_field_set(id,value,legacy=T)` will work in a basic way, but lacks
   any sort of field validation or automated tab switching
 
-- `nbs_investigation_submit(legcay=T)` should click the submit button,
+- `nbs_investigation_submit(legacy=T)` should click the submit button,
   but will not return any information about the success of the
   submission
-
-- `nbs_legacy_tab()` can be used to switch between tabs on legacy pages
 
 ## User Management
 

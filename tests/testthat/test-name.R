@@ -1,7 +1,11 @@
 library(wiNBS)
 library(testthat)
 
-#start_time<-Sys.time()
+
+start_time<-Sys.time()
+
+
+test_run<-round(runif(1,1,100000))
 test_that("Password set and get", {
   new_password<-paste0('testpassword',round(runif(1)*1000))
   nbs_password_set('test',new_password)
@@ -15,14 +19,14 @@ test_that("Browser Opened", {
 })
 
 test_that("Prod login", {
-  nbs_load('dc49p74', process='wiNBS tests')
+  nbs_load('dc49p74', process=paste0('wiNBS tests ',test_run))
   expect_match(unlist(remDr$getCurrentUrl()), 'production')
   expect_equal(unlist(remDr$getTitle()), "NBS Dashboard")
 })
 
 
 test_that("Staging login", {
-  nbs_load('dc49p74', environment = 'NBS Staging', process='wiNBS tests')
+  nbs_load('dc49p74', environment = 'NBS Staging', process=paste0('wiNBS tests ',test_run))
   expect_match(unlist(remDr$getCurrentUrl()), 'staging')
   expect_equal(unlist(remDr$getTitle()), "NBS Dashboard")
 })
@@ -39,7 +43,7 @@ test_that("Release - Entrust logout", {
 })
 
 test_that("Staging login 2", {
-  nbs_load('dc49p74', environment = 'NBS Staging', process='wiNBS tests')
+  nbs_load('dc49p74', environment = 'NBS Staging', process=paste0('wiNBS tests ',test_run))
   expect_match(unlist(remDr$getCurrentUrl()), 'staging')
   expect_equal(unlist(remDr$getTitle()), "NBS Dashboard")
 })
@@ -521,6 +525,17 @@ test_that('RELEASE - View ELR in DRR',{
 })
 
 
-#Sys.time()-start_time
+test_that('Close Browser',{
+  
+  expect_message(browser_close(),"Browser 'remDr' closed")
+  expect_false(exists("remDr"))
+})
+
+test_that('Logging to nbs_bot_activity table',{
+sand<-RODBC::odbcConnect('Sandbox')
+current_tests<<-RODBC::sqlQuery(sand,paste0("select * from nbs_bot_activity b where b.[process]='wiNBS tests ",test_run,"'"))
+expect_gt(nrow(current_tests),3)
+})
 
 
+Sys.time() - start_time

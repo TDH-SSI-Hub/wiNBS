@@ -480,13 +480,24 @@ go_to_event<-function(search_type, ID=NA,uid=NA,patient_page=F, verbose=T){
 
 #' Select a tab from an investigation, lab, or patient page
 #' 
-#' This function can be used to select a new (or the same) tab in patient pages and NBS labs and investigations that are pagebuilder pages (i.e., not legacy).
+#' This function can be used to select a new (or the same) tab in patient pages and NBS labs and investigations.
 #' Use the number of the tab you wish to select. You can call this function on the view or edit page.
 #' 
 #' @param tab Number for the tab you wish to click. 1 is farthest left.
+#' @param legacy T/F. Is the current page a legacy page? Use NA to autodetect if needed (slower).
 #'
 #' @return Nothing
 #' @export
-nbs_tab_select<-function(tab){
-  remDr$findElement('id',paste0('tabs0head',tab-1))$clickElement()
+nbs_tab_select<-function(tab, legacy=F){
+  
+  if(is.na(legacy)){
+    legacy<-nbs_page_is_legacy()
+  }
+  
+  if(legacy){
+    nbs_legacy_tab(tab)
+  }else{
+    remDr$findElement('id',paste0('tabs0head',tab-1))$clickElement()
+  }
+  
 }
